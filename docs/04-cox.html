@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>4&nbsp; Cox Regression – Survival Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./05-discrete-time.html" rel="next">
+<link href="./03-parametric.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link href="site_libs/tabwid-1.1.3/tabwid.css" rel="stylesheet">
+
+<script src="site_libs/tabwid-1.1.3/tabwid.js"></script>
+
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./04-cox.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Cox Regression</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Survival Analysis</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-concepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Concepts</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-km.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Kaplan-Meier</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-parametric.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Parametric</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-cox.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Cox Regression</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-discrete-time.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Discrete-Time</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Machine Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-case-study.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Case Study</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#fitting-the-model" id="toc-fitting-the-model" class="nav-link active" data-scroll-target="#fitting-the-model"><span class="header-section-number">4.1</span> Fitting the Model</a></li>
+  <li><a href="#assumptions" id="toc-assumptions" class="nav-link" data-scroll-target="#assumptions"><span class="header-section-number">4.2</span> Assumptions</a></li>
+  <li><a href="#interpreting-results" id="toc-interpreting-results" class="nav-link" data-scroll-target="#interpreting-results"><span class="header-section-number">4.3</span> Interpreting Results</a></li>
+  <li><a href="#reporting" id="toc-reporting" class="nav-link" data-scroll-target="#reporting"><span class="header-section-number">4.4</span> Reporting</a></li>
+  <li><a href="#landmark-analysis" id="toc-landmark-analysis" class="nav-link" data-scroll-target="#landmark-analysis"><span class="header-section-number">4.5</span> Landmark Analysis</a></li>
+  <li><a href="#time-dependent-covariates" id="toc-time-dependent-covariates" class="nav-link" data-scroll-target="#time-dependent-covariates"><span class="header-section-number">4.6</span> Time-Dependent Covariates</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span id="sec-semiparametric" class="quarto-section-identifier"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Cox Regression</span></span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>The KM curve with logrank test is a univariate analyses describing the effect of a single categorical factor variable on survival. Parametric and semi-parametric models, on the other hand, are able to describe the effect of <em>multiple</em> covariates. The Cox proportional hazards model is a semi-parametric model. The Cox model expresses the expected hazard, <span class="math inline">\(h(t)\)</span>, as an unspecified baseline hazard, <span class="math inline">\(h_0(t)\)</span>, multiplied by the exponential of a linear combination of parameters, <span class="math inline">\(\psi = e^{X\beta}\)</span>.</p>
+<p><span class="math display">\[h(t) = h_0(t) \cdot e^{X \beta} = \psi h_0(t).\]</span></p>
+<p><span class="math inline">\(h_0(t)\)</span> is unspecified because it cancels out of the model. To see this, consider a hypothetical data set where 6 participants are assumed to fall into one of two hazards: participants 1, 2, and 3 have <span class="math inline">\(h_0\)</span> and 4, 5, and 6 have <span class="math inline">\(\psi h_0\)</span>. Working through the event occurrences, the survival function is the product of each of the failure probabilities. Suppose participant 1 fails first. <span class="math inline">\(p_1 = \frac{h_0(t_1)}{3 \cdot h_0(t_1) + 3 \psi \cdot h_0(t_1)}\)</span>. Suppose participant 2 censors, then participant 4 fails. <span class="math inline">\(p_2 = \frac{\psi h_0(t_2)}{1 \cdot h_0(t_2) + 3 \psi \cdot h_0(t_2)}\)</span>. Now participant 3 fails. <span class="math inline">\(p_3 = \frac{h_0(t_3)}{1 \cdot h_0(t_3) + 2 \psi \cdot h_0(t_3)}\)</span>. Notice how <span class="math inline">\(h_0(t)\)</span> cancels in each ratio. The partial likelihood is the product of the failure probabilities, <span class="math inline">\(L(\psi) = \frac{\psi}{(3 + 3 \psi)(1 + 3 \psi)(1 + 2 \psi)}\)</span>.</p>
+<p>Find the value of <span class="math inline">\(\psi\)</span> that maximizes <span class="math inline">\(L(\psi)\)</span>. <span class="math inline">\(L(\psi)\)</span> is difficult to optimize, but its log is easier. <span class="math inline">\(l(\beta) = X \beta - \log (3 + 3 e^{X\beta}) - \log (1 + 3 e^{X\beta}) - \log (1 + 2 e^{X\beta})\)</span>. A function searches for the <span class="math inline">\(\beta\)</span> producing the global max. <span class="math inline">\(h_0(t)\)</span>, the baseline hazard, is estimated with non-parametric methods.</p>
+<p>The Cox model is essentially a multiple linear regression of the log hazard on <span class="math inline">\(X\)</span>, with the baseline hazard <span class="math inline">\(h_0(t)\)</span> acting as a time-dependent intercept term. The covariates act multiplicatively on the hazard at any point in time. Thus the hazard is <em>proportional</em> to the covariate values <span class="citation" data-cites="Clark2003b">(<a href="08-references.html#ref-Clark2003b" role="doc-biblioref">Bradburn 2003</a>)</span>. The proportionality of the model comes from the lack of time dependence in the <span class="math inline">\(X\)</span> variables. The ratio of the hazard functions of two individuals is</p>
+<p><span class="math display">\[\frac{h_i(t)}{h_j(t)} = \frac{h_0(t) \cdot e^{X_i \beta}}{h_0(t) \cdot e^{X_j \beta}} = e^{(\Delta X)\beta}.\]</span></p>
+<p>The ratio of person <em>i</em>’s and person <em>j</em>’s hazard at any time <em>t</em> is a function of difference in the regression variables, not of <em>t</em>. I.e., <em>i</em>’s hazard is a constant proportion of <em>j</em>’s hazard.</p>
+<p>There are three ways to test <span class="math inline">\(H_0 : \beta = 0\)</span>: the Wald test, the score test, and the likelihood ratio test.</p>
+<ul>
+<li><p>The Wald test statistic is <span class="math inline">\(Z = \hat{\beta} / se({\hat{\beta}})\)</span>. Calculate <span class="math inline">\(se({\hat{\beta}})\)</span> from the second derivative of <span class="math inline">\(l(\beta)\)</span>. As with other Wald tests, the square of this standard normal random variable is distributed chi-square, so you can equivalently test whether <span class="math inline">\(Z^2 &gt; \chi_{\alpha, 1}^2\)</span>.</p></li>
+<li><p>The score test compares the slope of <span class="math inline">\(l(\beta)\)</span> at <span class="math inline">\(\beta = 0\)</span> to 0. The test statistic is normally distributed, and again, its square is distributed chi-square.</p></li>
+<li><p>The likelihood ratio test statistic equals <span class="math inline">\(2 [l(\beta = \hat{\beta}) - l(\beta = 0)]\)</span>. It has a chi-square distribution with one degree of freedom.</p></li>
+</ul>
+<p>The Cox proportional hazards model is analogous to the <a href="https://bookdown.org/mpfoley1973/supervised-ml/generalized-linear-models-glm.html#logistic-regression">logistic regression</a> model. Rearranging <span class="math inline">\(h(t) = h_0(t) \cdot e^{X \beta}\)</span>,</p>
+<p><span class="math display">\[\ln \left[ \frac{h(t)}{h_0(t)} \right] = X \beta.\]</span></p>
+<p>Whereas logistic regression predicts the <em>log odds</em> of the response, Cox regression predicts the <em>log relative hazard</em> (relative to the unspecified baseline) of the response. <span class="math inline">\(\beta\)</span> is the change in the log of the relative hazard associated with a one unit change in <span class="math inline">\(X\)</span>. Its antilog is the hazard ratio (HR). A positive <span class="math inline">\(e^{\beta_j}\)</span> means the hazard increases with the covariate.</p>
+<p><span class="math display">\[
+\begin{eqnarray}
+(x_b - x_a) \beta &amp;=&amp; \ln \left[ \frac{h_b(t)}{h_0(t)} \right] - \ln \left[ \frac{h_a(t)}{h_0(t)} \right] \\
+\beta &amp;=&amp; \ln \left[ \frac{h_b(t)}{h_a(t)} \right] \\
+e^\beta &amp;=&amp; \frac{h_b(t)}{h_a(t)} \\
+&amp;=&amp; \mathrm{HR}
+\end{eqnarray}
+\]</span></p>
+<p>The Cox proportional hazards model is demonstrated here with a case study using the <code>survival::lung</code> data set used in <a href="02-km.html" class="quarto-xref"><span>Chapter 2</span></a>. The study investigated differences in all-cause mortality between men and women diagnosed with advanced lung cancer. 227 participants aged 39 to 82 were monitored up to three years until time of death. The participants were segmented into three groups according to their ECOG performance score: <em>Asymptomatic</em>, symptomatic but completely <em>Ambulatory</em>, and <em>Bedridden</em> at least part of the day. Participants’ age and gender were captured as controlling covariates. <a href="#tbl-04-smrystats" class="quarto-xref">Table&nbsp;<span>4.1</span></a> presents the summary statistics of the data set.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(t1 <span class="ot">&lt;-</span> d_lung <span class="sc">%&gt;%</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">status =</span> <span class="fu">factor</span>(status, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"censored"</span>, <span class="st">"died"</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tbl_summary</span>(<span class="at">by =</span> <span class="st">"ph.ecog"</span>, <span class="at">include =</span> <span class="fu">c</span>(time, status, ph.ecog, age, sex)) <span class="sc">%&gt;%</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_overall</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_flex_table</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  flextable<span class="sc">::</span><span class="fu">theme_zebra</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="tbl-04-smrystats" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-04-smrystats-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;4.1: Summary statistics.
+</figcaption>
+<div aria-describedby="tbl-04-smrystats-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div class="tabwid"><style>.cl-2437c254{}.cl-24301478{font-family:'Arial';font-size:11pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-2430148c{font-family:'Arial';font-size:6.6pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;position: relative;bottom:3.3pt;}.cl-2430148d{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-2432bf84{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:2pt;padding-top:2pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-2432bf8e{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-2432bf8f{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:15pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-2432bf90{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-2432d744{width:1.304in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d745{width:1.279in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d74e{width:1.423in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d76c{width:1.194in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d780{width:1.304in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d78a{width:1.279in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d79e{width:1.423in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d79f{width:1.194in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7a0{width:1.304in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7b2{width:1.279in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7bc{width:1.423in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7bd{width:1.194in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7c6{width:1.304in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7c7{width:1.279in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7c8{width:1.423in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7d0{width:1.194in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7d1{width:1.304in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7d2{width:1.279in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7ee{width:1.423in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7ef{width:1.194in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7f8{width:1.304in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7f9{width:1.279in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d7fa{width:1.423in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-2432d80c{width:1.194in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing="true" class="cl-2437c254"><thead><tr style="overflow-wrap:break-word;"><th class="cl-2432d744"><p class="cl-2432bf84"><span class="cl-24301478">Characteristic</span></p></th><th class="cl-2432d745"><p class="cl-2432bf84"><span class="cl-24301478">Overall</span><span class="cl-24301478">  </span><br><span class="cl-24301478">N = 227</span><span class="cl-2430148c">1</span></p></th><th class="cl-2432d74e"><p class="cl-2432bf84"><span class="cl-24301478">Asymptomatic</span><span class="cl-24301478">  </span><br><span class="cl-24301478">N = 63</span><span class="cl-2430148c">1</span></p></th><th class="cl-2432d745"><p class="cl-2432bf84"><span class="cl-24301478">Ambulatory</span><span class="cl-24301478">  </span><br><span class="cl-24301478">N = 113</span><span class="cl-2430148c">1</span></p></th><th class="cl-2432d76c"><p class="cl-2432bf84"><span class="cl-24301478">Bedridden</span><span class="cl-24301478">  </span><br><span class="cl-24301478">N = 51</span><span class="cl-2430148c">1</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-2432d780"><p class="cl-2432bf8e"><span class="cl-2430148d">time</span></p></td><td class="cl-2432d78a"><p class="cl-2432bf8e"><span class="cl-2430148d">259 (167, 404)</span></p></td><td class="cl-2432d79e"><p class="cl-2432bf8e"><span class="cl-2430148d">303 (224, 442)</span></p></td><td class="cl-2432d78a"><p class="cl-2432bf8e"><span class="cl-2430148d">243 (177, 426)</span></p></td><td class="cl-2432d79f"><p class="cl-2432bf8e"><span class="cl-2430148d">180 (95, 310)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2432d7a0"><p class="cl-2432bf8e"><span class="cl-2430148d">status</span></p></td><td class="cl-2432d7b2"><p class="cl-2432bf8e"><span class="cl-2430148d"></span></p></td><td class="cl-2432d7bc"><p class="cl-2432bf8e"><span class="cl-2430148d"></span></p></td><td class="cl-2432d7b2"><p class="cl-2432bf8e"><span class="cl-2430148d"></span></p></td><td class="cl-2432d7bd"><p class="cl-2432bf8e"><span class="cl-2430148d"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2432d780"><p class="cl-2432bf8f"><span class="cl-2430148d">censored</span></p></td><td class="cl-2432d78a"><p class="cl-2432bf8e"><span class="cl-2430148d">63 (28%)</span></p></td><td class="cl-2432d79e"><p class="cl-2432bf8e"><span class="cl-2430148d">26 (41%)</span></p></td><td class="cl-2432d78a"><p class="cl-2432bf8e"><span class="cl-2430148d">31 (27%)</span></p></td><td class="cl-2432d79f"><p class="cl-2432bf8e"><span class="cl-2430148d">6 (12%)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2432d7c6"><p class="cl-2432bf8f"><span class="cl-2430148d">died</span></p></td><td class="cl-2432d7c7"><p class="cl-2432bf8e"><span class="cl-2430148d">164 (72%)</span></p></td><td class="cl-2432d7c8"><p class="cl-2432bf8e"><span class="cl-2430148d">37 (59%)</span></p></td><td class="cl-2432d7c7"><p class="cl-2432bf8e"><span class="cl-2430148d">82 (73%)</span></p></td><td class="cl-2432d7d0"><p class="cl-2432bf8e"><span class="cl-2430148d">45 (88%)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2432d780"><p class="cl-2432bf8e"><span class="cl-2430148d">age</span></p></td><td class="cl-2432d78a"><p class="cl-2432bf8e"><span class="cl-2430148d">63 (56, 69)</span></p></td><td class="cl-2432d79e"><p class="cl-2432bf8e"><span class="cl-2430148d">61 (56, 68)</span></p></td><td class="cl-2432d78a"><p class="cl-2432bf8e"><span class="cl-2430148d">63 (55, 68)</span></p></td><td class="cl-2432d79f"><p class="cl-2432bf8e"><span class="cl-2430148d">68 (60, 73)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2432d7d1"><p class="cl-2432bf8e"><span class="cl-2430148d">sex</span></p></td><td class="cl-2432d7d2"><p class="cl-2432bf8e"><span class="cl-2430148d"></span></p></td><td class="cl-2432d7ee"><p class="cl-2432bf8e"><span class="cl-2430148d"></span></p></td><td class="cl-2432d7d2"><p class="cl-2432bf8e"><span class="cl-2430148d"></span></p></td><td class="cl-2432d7ef"><p class="cl-2432bf8e"><span class="cl-2430148d"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2432d780"><p class="cl-2432bf8f"><span class="cl-2430148d">Male</span></p></td><td class="cl-2432d78a"><p class="cl-2432bf8e"><span class="cl-2430148d">137 (60%)</span></p></td><td class="cl-2432d79e"><p class="cl-2432bf8e"><span class="cl-2430148d">36 (57%)</span></p></td><td class="cl-2432d78a"><p class="cl-2432bf8e"><span class="cl-2430148d">71 (63%)</span></p></td><td class="cl-2432d79f"><p class="cl-2432bf8e"><span class="cl-2430148d">30 (59%)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-2432d7c6"><p class="cl-2432bf8f"><span class="cl-2430148d">Female</span></p></td><td class="cl-2432d7c7"><p class="cl-2432bf8e"><span class="cl-2430148d">90 (40%)</span></p></td><td class="cl-2432d7c8"><p class="cl-2432bf8e"><span class="cl-2430148d">27 (43%)</span></p></td><td class="cl-2432d7c7"><p class="cl-2432bf8e"><span class="cl-2430148d">42 (37%)</span></p></td><td class="cl-2432d7d0"><p class="cl-2432bf8e"><span class="cl-2430148d">21 (41%)</span></p></td></tr></tbody><tfoot><tr style="overflow-wrap:break-word;"><td colspan="5" class="cl-2432d7f8"><p class="cl-2432bf90"><span class="cl-2430148c">1</span><span class="cl-24301478">Median (Q1, Q3); n (%)</span></p></td></tr></tfoot></table></div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<section id="fitting-the-model" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="fitting-the-model"><span class="header-section-number">4.1</span> Fitting the Model</h2>
+<p>Fit a Cox proportional hazards model with <code>coxph()</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>cox_fit <span class="ot">&lt;-</span> <span class="fu">coxph</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> sex <span class="sc">+</span> ph.ecog <span class="sc">+</span> age, <span class="at">data =</span> d_lung)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cox_fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call:
+coxph(formula = Surv(time, status) ~ sex + ph.ecog + age, data = d_lung)
+
+  n= 227, number of events= 164 
+
+                       coef exp(coef)  se(coef)      z Pr(&gt;|z|)    
+sexFemale         -0.551322  0.576188  0.167987 -3.282  0.00103 ** 
+ph.ecogAmbulatory  0.409461  1.506006  0.199596  2.051  0.04022 *  
+ph.ecogBedridden   0.915752  2.498654  0.227042  4.033  5.5e-05 ***
+age                0.011031  1.011092  0.009297  1.186  0.23544    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+                  exp(coef) exp(-coef) lower .95 upper .95
+sexFemale            0.5762     1.7355    0.4145    0.8009
+ph.ecogAmbulatory    1.5060     0.6640    1.0184    2.2270
+ph.ecogBedridden     2.4987     0.4002    1.6012    3.8991
+age                  1.0111     0.9890    0.9928    1.0297
+
+Concordance= 0.637  (se = 0.025 )
+Likelihood ratio test= 30.08  on 4 df,   p=5e-06
+Wald test            = 29.77  on 4 df,   p=5e-06
+Score (logrank) test = 30.94  on 4 df,   p=3e-06</code></pre>
+</div>
+</div>
+<p>A negative coefficient estimator means the hazard decreases with increasing values of the variable. Females have a log hazard of death equal to <code>coef(cox_fit)[1]</code> = -0.55 of that of males. The exponential is the hazard ratio, the effect-size of the covariate. Being female reduces the hazard by a factor of <code>exp(coef(cox_fit)[1])</code> = 0.58 (42%). I.e., at any given time, 0.58 times as many females die as males.</p>
+<p>The last section of the summary object is the three tests for the overall significance of the model. These three methods are asymptotically equivalent. The Likelihood ratio test has better behavior for small sample sizes, so it is generally preferred. The p-values for all three overall tests (likelihood, Wald, and score) are significant, indicating that the model is significant (not all <span class="math inline">\(\beta\)</span> values are 0).</p>
+<p>Use <strong>gtsummary</strong> to present the results.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tbl_regression</span>(cox_fit, <span class="at">exponentiate =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="npupfonrqw" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#npupfonrqw table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#npupfonrqw thead, #npupfonrqw tbody, #npupfonrqw tfoot, #npupfonrqw tr, #npupfonrqw td, #npupfonrqw th {
+  border-style: none;
+}
+
+#npupfonrqw p {
+  margin: 0;
+  padding: 0;
+}
+
+#npupfonrqw .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#npupfonrqw .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#npupfonrqw .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#npupfonrqw .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#npupfonrqw .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#npupfonrqw .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#npupfonrqw .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#npupfonrqw .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#npupfonrqw .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#npupfonrqw .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#npupfonrqw .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#npupfonrqw .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#npupfonrqw .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#npupfonrqw .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#npupfonrqw .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#npupfonrqw .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#npupfonrqw .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#npupfonrqw .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#npupfonrqw .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#npupfonrqw .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#npupfonrqw .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#npupfonrqw .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#npupfonrqw .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#npupfonrqw .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#npupfonrqw .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#npupfonrqw .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#npupfonrqw .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#npupfonrqw .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#npupfonrqw .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#npupfonrqw .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#npupfonrqw .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#npupfonrqw .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#npupfonrqw .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#npupfonrqw .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#npupfonrqw .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#npupfonrqw .gt_left {
+  text-align: left;
+}
+
+#npupfonrqw .gt_center {
+  text-align: center;
+}
+
+#npupfonrqw .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#npupfonrqw .gt_font_normal {
+  font-weight: normal;
+}
+
+#npupfonrqw .gt_font_bold {
+  font-weight: bold;
+}
+
+#npupfonrqw .gt_font_italic {
+  font-style: italic;
+}
+
+#npupfonrqw .gt_super {
+  font-size: 65%;
+}
+
+#npupfonrqw .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#npupfonrqw .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#npupfonrqw .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#npupfonrqw .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#npupfonrqw .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#npupfonrqw .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#npupfonrqw .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#npupfonrqw .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#npupfonrqw div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header gt_col_headings">
+<th id="label" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col"><strong>Characteristic</strong></th>
+<th id="estimate" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col"><strong>HR</strong><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span></th>
+<th id="conf.low" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col"><strong>95% CI</strong><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span></th>
+<th id="p.value" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col"><strong>p-value</strong></th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="label">sex</td>
+<td class="gt_row gt_center" headers="estimate"><br>
+</td>
+<td class="gt_row gt_center" headers="conf.low"><br>
+</td>
+<td class="gt_row gt_center" headers="p.value"><br>
+</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="label">&nbsp;&nbsp;&nbsp;&nbsp;Male</td>
+<td class="gt_row gt_center" headers="estimate">—</td>
+<td class="gt_row gt_center" headers="conf.low">—</td>
+<td class="gt_row gt_center" headers="p.value"><br>
+</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="label">&nbsp;&nbsp;&nbsp;&nbsp;Female</td>
+<td class="gt_row gt_center" headers="estimate">0.58</td>
+<td class="gt_row gt_center" headers="conf.low">0.41, 0.80</td>
+<td class="gt_row gt_center" headers="p.value">0.001</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="label">ph.ecog</td>
+<td class="gt_row gt_center" headers="estimate"><br>
+</td>
+<td class="gt_row gt_center" headers="conf.low"><br>
+</td>
+<td class="gt_row gt_center" headers="p.value"><br>
+</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="label">&nbsp;&nbsp;&nbsp;&nbsp;Asymptomatic</td>
+<td class="gt_row gt_center" headers="estimate">—</td>
+<td class="gt_row gt_center" headers="conf.low">—</td>
+<td class="gt_row gt_center" headers="p.value"><br>
+</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="label">&nbsp;&nbsp;&nbsp;&nbsp;Ambulatory</td>
+<td class="gt_row gt_center" headers="estimate">1.51</td>
+<td class="gt_row gt_center" headers="conf.low">1.02, 2.23</td>
+<td class="gt_row gt_center" headers="p.value">0.040</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="label">&nbsp;&nbsp;&nbsp;&nbsp;Bedridden</td>
+<td class="gt_row gt_center" headers="estimate">2.50</td>
+<td class="gt_row gt_center" headers="conf.low">1.60, 3.90</td>
+<td class="gt_row gt_center" headers="p.value">&lt;0.001</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="label">age</td>
+<td class="gt_row gt_center" headers="estimate">1.01</td>
+<td class="gt_row gt_center" headers="conf.low">0.99, 1.03</td>
+<td class="gt_row gt_center" headers="p.value">0.2</td>
+</tr>
+</tbody><tfoot class="gt_footnotes">
+<tr class="odd">
+<td colspan="4" class="gt_footnote"><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span> HR = Hazard Ratio, CI = Confidence Interval</td>
+</tr>
+</tfoot>
+
+</table>
+
+</div>
+</div>
+</div>
+<p>Visualize the fitted Cox model for each risk group. Function <code>survfit()</code> estimates survival at the mean values of covariates by default. That’s usually not useful, so instead pass a data frame with test cases into the <code>newdata</code> argument.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Predictions will be for all levels of sex and ph.ecog, but only at the median</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># age.</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>new_dat <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">sex =</span> <span class="fu">levels</span>(d_lung<span class="sc">$</span>sex),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">ph.ecog =</span> <span class="fu">levels</span>(d_lung<span class="sc">$</span>ph.ecog),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">age =</span> <span class="fu">median</span>(d_lung<span class="sc">$</span>age)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># strata is our key to join back to the fitted values.</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">strata =</span> <span class="fu">as.factor</span>(<span class="fu">row_number</span>()))</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Create fitted survival curves at the covariate presets.</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>fit_curves <span class="ot">&lt;-</span> <span class="fu">survfit</span>(cox_fit, <span class="at">newdata =</span> new_dat, <span class="at">data =</span> d_lung)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co"># `surv_summary()` is like `summary()` except that it includes risk table info,</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co"># confidence interval attributes, and pivots the strata longer.</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>surv_summary <span class="ot">&lt;-</span> <span class="fu">surv_summary</span>(fit_curves) <span class="sc">%&gt;%</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># The cases are labeled "strata", but `survsummary()` doesn't label what the </span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># strata are! Get it from new_dat.</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(new_dat, <span class="at">by =</span> <span class="st">"strata"</span>)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Now use ggplot() just like normal.</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>median_line <span class="ot">&lt;-</span> surv_summary <span class="sc">%&gt;%</span> </span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(surv <span class="sc">&gt;=</span> .<span class="dv">5</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(sex, ph.ecog) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">.groups =</span> <span class="st">"drop"</span>, <span class="at">max_t =</span> <span class="fu">max</span>(time))</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>surv_summary <span class="sc">%&gt;%</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> time, <span class="at">y =</span> surv)) <span class="sc">+</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color =</span> ph.ecog)) <span class="sc">+</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> lower, <span class="at">ymax =</span> upper, <span class="at">color =</span> ph.ecog, <span class="at">fill =</span> ph.ecog), </span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>              <span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(<span class="at">data =</span> median_line, </span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>               <span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">0</span>, <span class="at">xend =</span> max_t, <span class="at">y =</span> .<span class="dv">5</span>, <span class="at">yend =</span> .<span class="dv">5</span>),</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>               <span class="at">linetype =</span> <span class="dv">2</span>, <span class="at">color =</span> <span class="st">"gray40"</span>) <span class="sc">+</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(<span class="at">data =</span> median_line, </span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>               <span class="fu">aes</span>(<span class="at">x =</span> max_t, <span class="at">xend =</span> max_t, <span class="at">y =</span> <span class="dv">0</span>, <span class="at">yend =</span> .<span class="dv">5</span>, <span class="at">color =</span> ph.ecog),</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>               <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="at">facets =</span> <span class="fu">vars</span>(sex)) <span class="sc">+</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> <span class="fu">percent_format</span>(<span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_light</span>() <span class="sc">+</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>) <span class="sc">+</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">X =</span> <span class="st">"Time"</span>, <span class="at">y =</span> <span class="st">"Survival Probability"</span>, <span class="at">color =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Cox fitted model"</span>,</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Age held at median."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04-cox_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="assumptions" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="assumptions"><span class="header-section-number">4.2</span> Assumptions</h2>
+<p>A Cox proportional hazards model analysis is valid under the following conditions (<a href="https://timeseriesreasoning.com/contents/schoenfeld-residuals/">Ref1</a>, <a href="https://www.r-bloggers.com/2016/12/cox-model-assumptions/">Ref2</a>).</p>
+<ul>
+<li><strong>Hazards are proportional</strong>. At any time <em>t</em>, all individuals experience a multiple of the same baseline hazard, <span class="math inline">\(h_0(t)\)</span>.</li>
+<li><strong>Covariates are time invariant</strong>. Covariate values do not vary with time. Age <em>at onset</em> is time invariant, but age is not. See <span class="quarto-unresolved-ref">?sec-time-dependent-covariates</span> for how to model with time dependent covariates.</li>
+<li><strong>Coefficients are time invariant</strong>. The regression coefficients, <span class="math inline">\(\beta\)</span>, do not vary with time.</li>
+<li><strong>Influential data points are explained</strong>. Outliers that are influential are confirmed to be valid (non-spurious) data.</li>
+<li><strong>Covariates and log hazard are linearly related</strong>.</li>
+</ul>
+<p>Test the proportionality and time invariance assumptions with Schoenfeld residuals. Schoenfeld residuals are like normal residuals (<span class="math inline">\(y\)</span> vs <span class="math inline">\(\hat{y}\)</span>) except that they predict <span class="math inline">\(X\)</span> and compare <span class="math inline">\(\hat{X}\)</span> to <span class="math inline">\(X\)</span>. Shoenfeld residuals have three important properties. * The residuals are uncorrelated with each other if Cox model assumptions hold. Test for this with an auto-correlation plot or a white noise test such as the Ljung-Box test. * The residuals are time-independent. Test for this with a plot the residuals versus will. * The mean of the scaled residuals is zero if <span class="math inline">\(\beta\)</span> is time-independent. Test with a Chi-square test.</p>
+<p>The function <code>survival::cox.zph()</code> correlates the corresponding set of scaled Schoenfeld residuals with time. If the hazards are time-invariant, the coefficient estimates will be zero. <code>cox.zph()</code> <em>p</em>-values &lt; .05 mean the slope <em>is</em> non-zero. Below, the test is not statistically significant for each of the covariates, and the global test is also not statistically significant, so the proportional hazards assumption holds.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(cox_test_ph <span class="ot">&lt;-</span> <span class="fu">cox.zph</span>(cox_fit))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        chisq df    p
+sex      2.54  1 0.11
+ph.ecog  3.04  2 0.22
+age      0.20  1 0.65
+GLOBAL   5.24  4 0.26</code></pre>
+</div>
+</div>
+<p>Use <code>ggcoxzph()</code> to plot the residuals.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcoxzph</span>(cox_test_ph) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04-cox_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Test the influential observations using the <code>survminer::ggcoxdiagnostics()</code> function with parameter <code>type = “dfbeta”</code>. The plots show the estimated changes in the regression coefficients from deleting each observation in turn. Compare the magnitudes of the largest dfbeta values to the regression coefficients. In this case, none of the observations is very influential.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcoxdiagnostics</span>(cox_fit, <span class="at">type =</span> <span class="st">"dfbeta"</span>, <span class="at">linear.predictions =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04-cox_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Alternatively, test for influential observations with deviance residuals. Deviance residuals are a normalized transformation of the Martingale residuals. Deviance residuals should be symmetrically distributed about zero with a standard deviation of 1.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcoxdiagnostics</span>(cox_fit, <span class="at">type =</span> <span class="st">"deviance"</span>, <span class="at">linear.predictions =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04-cox_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Test the linearity assumption by plotting the Martingale residuals against the continuous covariates to ensure there are no patterns (nonlinearity is not an issue for categorical variables). Martingale residuals range (-Inf, +1). Values near 1 mean the even occurred too soon, and values near -Inf mean the event occurred too late. Use the <code>survminer::ggcoxfunctional()</code> function. Fitted lines with lowess function should be linear to satisfy the Cox proportional hazards model assumptions.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>tmp_fit <span class="ot">&lt;-</span> <span class="fu">coxph</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> age, <span class="at">data =</span> d_lung)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcoxfunctional</span>(<span class="at">fit =</span> tmp_fit, <span class="at">data =</span> d_lung)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04-cox_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="interpreting-results" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="interpreting-results"><span class="header-section-number">4.3</span> Interpreting Results</h2>
+<p>Table <span class="quarto-unresolved-ref">?tbl-cox_result</span> shows the effect sizes as hazard ratios with 95% confidence intervals (CI) for each covariate in relation to overall survival. Each factor is assessed through separate univariate Cox regressions. All three factors of the multivariate model show how the factors jointly impact on survival. Being famale increased survival, abd higher ECOG scores impaired survival. Age was not statistically different from zero (at the .05 level). The <em>p</em>-values for the comparisons between each ECOG type are presented, but it is possible to also show an overall likelihood ratio test for the differences between the categories as a whole.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>sex_gt <span class="ot">&lt;-</span> <span class="fu">coxph</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> sex, <span class="at">data =</span> d_lung) <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tbl_regression</span>(<span class="at">exponentiate =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>ph.ecog_gt <span class="ot">&lt;-</span> <span class="fu">coxph</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung) <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tbl_regression</span>(<span class="at">exponentiate =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>age_gt <span class="ot">&lt;-</span> <span class="fu">coxph</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> age, <span class="at">data =</span> d_lung) <span class="sc">%&gt;%</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tbl_regression</span>(<span class="at">exponentiate =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>cox_uni_gt <span class="ot">&lt;-</span> gtsummary<span class="sc">::</span><span class="fu">tbl_stack</span>(<span class="fu">list</span>(sex_gt, ph.ecog_gt, age_gt))</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>cox_multi_gt <span class="ot">&lt;-</span> <span class="fu">tbl_regression</span>(cox_fit, <span class="at">exponentiate =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>gtsummary<span class="sc">::</span><span class="fu">tbl_merge</span>(</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(cox_uni_gt, cox_multi_gt),</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">tab_spanner =</span> <span class="fu">c</span>(<span class="st">"Univariate analysis"</span>, <span class="st">"Multivaraite analysis"</span>)</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  gtsummary<span class="sc">::</span><span class="fu">as_flex_table</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  flextable<span class="sc">::</span><span class="fu">theme_zebra</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  flextable<span class="sc">::</span><span class="fu">set_caption</span>(<span class="st">"Hazard ratios from Cox PH model for lung dataset."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="tbl-cox-result" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-cox-result-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;4.2: Hazard ratios from Cox PH model for lung dataset.
+</figcaption>
+<div aria-describedby="tbl-cox-result-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div class="tabwid"><style>.cl-29368ed4{}.cl-292d37ee{font-family:'Arial';font-size:11pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-292d380c{font-family:'Arial';font-size:6.6pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;position: relative;bottom:3.3pt;}.cl-292d380d{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-292fb6ae{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:2pt;padding-top:2pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-292fb6af{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-292fb6b8{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:15pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-292fb6b9{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-292fcd2e{width:1.43in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd2f{width:0.583in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd38{width:0.965in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd39{width:0.82in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd42{width:1.43in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd4c{width:0.583in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd4d{width:0.965in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd4e{width:0.82in;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd56{width:1.43in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd57{width:0.583in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd58{width:0.965in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd59{width:0.82in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd60{width:1.43in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd61{width:0.583in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd62{width:0.965in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd6a{width:0.82in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd6b{width:1.43in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd6c{width:0.583in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd6d{width:0.965in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd74{width:0.82in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd75{width:1.43in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd76{width:0.583in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd77{width:0.965in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd7e{width:0.82in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd7f{width:1.43in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd80{width:0.583in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd88{width:0.965in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd89{width:0.82in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd92{width:1.43in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd93{width:0.583in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd94{width:0.965in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd9c{width:0.82in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd9d{width:1.43in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcd9e{width:0.583in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcda6{width:0.965in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-292fcda7{width:0.82in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing="true" class="cl-29368ed4"><thead><tr style="overflow-wrap:break-word;"><th class="cl-292fcd2e"><p class="cl-292fb6ae"><span class="cl-292d37ee"> </span></p></th><th colspan="3" class="cl-292fcd2f"><p class="cl-292fb6ae"><span class="cl-292d37ee">Univariate analysis</span></p></th><th colspan="3" class="cl-292fcd2f"><p class="cl-292fb6ae"><span class="cl-292d37ee">Multivaraite analysis</span></p></th></tr><tr style="overflow-wrap:break-word;"><th class="cl-292fcd42"><p class="cl-292fb6ae"><span class="cl-292d37ee">Characteristic</span></p></th><th class="cl-292fcd4c"><p class="cl-292fb6ae"><span class="cl-292d37ee">HR</span><span class="cl-292d380c">1</span></p></th><th class="cl-292fcd4d"><p class="cl-292fb6ae"><span class="cl-292d37ee">95% CI</span><span class="cl-292d380c">1</span></p></th><th class="cl-292fcd4e"><p class="cl-292fb6ae"><span class="cl-292d37ee">p-value</span></p></th><th class="cl-292fcd4c"><p class="cl-292fb6ae"><span class="cl-292d37ee">HR</span><span class="cl-292d380c">1</span></p></th><th class="cl-292fcd4d"><p class="cl-292fb6ae"><span class="cl-292d37ee">95% CI</span><span class="cl-292d380c">1</span></p></th><th class="cl-292fcd4e"><p class="cl-292fb6ae"><span class="cl-292d37ee">p-value</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-292fcd56"><p class="cl-292fb6af"><span class="cl-292d380d">sex</span></p></td><td class="cl-292fcd57"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd58"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd59"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd57"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd58"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd59"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-292fcd60"><p class="cl-292fb6b8"><span class="cl-292d380d">Male</span></p></td><td class="cl-292fcd61"><p class="cl-292fb6af"><span class="cl-292d380d">—</span></p></td><td class="cl-292fcd62"><p class="cl-292fb6af"><span class="cl-292d380d">—</span></p></td><td class="cl-292fcd6a"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd61"><p class="cl-292fb6af"><span class="cl-292d380d">—</span></p></td><td class="cl-292fcd62"><p class="cl-292fb6af"><span class="cl-292d380d">—</span></p></td><td class="cl-292fcd6a"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-292fcd6b"><p class="cl-292fb6b8"><span class="cl-292d380d">Female</span></p></td><td class="cl-292fcd6c"><p class="cl-292fb6af"><span class="cl-292d380d">0.59</span></p></td><td class="cl-292fcd6d"><p class="cl-292fb6af"><span class="cl-292d380d">0.43, 0.82</span></p></td><td class="cl-292fcd74"><p class="cl-292fb6af"><span class="cl-292d380d">0.002</span></p></td><td class="cl-292fcd6c"><p class="cl-292fb6af"><span class="cl-292d380d">0.58</span></p></td><td class="cl-292fcd6d"><p class="cl-292fb6af"><span class="cl-292d380d">0.41, 0.80</span></p></td><td class="cl-292fcd74"><p class="cl-292fb6af"><span class="cl-292d380d">0.001</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-292fcd75"><p class="cl-292fb6af"><span class="cl-292d380d">ph.ecog</span></p></td><td class="cl-292fcd76"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd77"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd7e"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd76"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd77"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd7e"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-292fcd7f"><p class="cl-292fb6b8"><span class="cl-292d380d">Asymptomatic</span></p></td><td class="cl-292fcd80"><p class="cl-292fb6af"><span class="cl-292d380d">—</span></p></td><td class="cl-292fcd88"><p class="cl-292fb6af"><span class="cl-292d380d">—</span></p></td><td class="cl-292fcd89"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td><td class="cl-292fcd80"><p class="cl-292fb6af"><span class="cl-292d380d">—</span></p></td><td class="cl-292fcd88"><p class="cl-292fb6af"><span class="cl-292d380d">—</span></p></td><td class="cl-292fcd89"><p class="cl-292fb6af"><span class="cl-292d380d"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-292fcd75"><p class="cl-292fb6b8"><span class="cl-292d380d">Ambulatory</span></p></td><td class="cl-292fcd76"><p class="cl-292fb6af"><span class="cl-292d380d">1.45</span></p></td><td class="cl-292fcd77"><p class="cl-292fb6af"><span class="cl-292d380d">0.98, 2.13</span></p></td><td class="cl-292fcd7e"><p class="cl-292fb6af"><span class="cl-292d380d">0.064</span></p></td><td class="cl-292fcd76"><p class="cl-292fb6af"><span class="cl-292d380d">1.51</span></p></td><td class="cl-292fcd77"><p class="cl-292fb6af"><span class="cl-292d380d">1.02, 2.23</span></p></td><td class="cl-292fcd7e"><p class="cl-292fb6af"><span class="cl-292d380d">0.040</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-292fcd6b"><p class="cl-292fb6b8"><span class="cl-292d380d">Bedridden</span></p></td><td class="cl-292fcd6c"><p class="cl-292fb6af"><span class="cl-292d380d">2.54</span></p></td><td class="cl-292fcd6d"><p class="cl-292fb6af"><span class="cl-292d380d">1.64, 3.93</span></p></td><td class="cl-292fcd74"><p class="cl-292fb6af"><span class="cl-292d380d">&lt;0.001</span></p></td><td class="cl-292fcd6c"><p class="cl-292fb6af"><span class="cl-292d380d">2.50</span></p></td><td class="cl-292fcd6d"><p class="cl-292fb6af"><span class="cl-292d380d">1.60, 3.90</span></p></td><td class="cl-292fcd74"><p class="cl-292fb6af"><span class="cl-292d380d">&lt;0.001</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-292fcd92"><p class="cl-292fb6af"><span class="cl-292d380d">age</span></p></td><td class="cl-292fcd93"><p class="cl-292fb6af"><span class="cl-292d380d">1.02</span></p></td><td class="cl-292fcd94"><p class="cl-292fb6af"><span class="cl-292d380d">1.00, 1.04</span></p></td><td class="cl-292fcd9c"><p class="cl-292fb6af"><span class="cl-292d380d">0.040</span></p></td><td class="cl-292fcd93"><p class="cl-292fb6af"><span class="cl-292d380d">1.01</span></p></td><td class="cl-292fcd94"><p class="cl-292fb6af"><span class="cl-292d380d">0.99, 1.03</span></p></td><td class="cl-292fcd9c"><p class="cl-292fb6af"><span class="cl-292d380d">0.2</span></p></td></tr></tbody><tfoot><tr style="overflow-wrap:break-word;"><td colspan="7" class="cl-292fcd9d"><p class="cl-292fb6b9"><span class="cl-292d380c">1</span><span class="cl-292d37ee">HR = Hazard Ratio, CI = Confidence Interval</span></p></td></tr></tfoot></table></div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+</section>
+<section id="reporting" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="reporting"><span class="header-section-number">4.4</span> Reporting</h2>
+<p>The guidelines for reporting the Kaplan-Meier test are from Laerd’s Kaplan-Meier using SPSS Statistics <span class="citation" data-cites="Laerd2015">(<a href="08-references.html#ref-Laerd2015" role="doc-biblioref">Laerd 2015</a>)</span>. Report the results like this.</p>
+<blockquote class="blockquote">
+<p>227 Men and women diagnosed with advanced lung cancer aged 39 to 82 were monitored up to three years until time of death. Participants were classified into three groups according to their ECOG performance score: <em>asymptomatic</em> (n = 63), <em>symptomatic but completely ambulatory</em> (n = 113), and <em>bedridden at least part of the day</em> (n = 51). A Cox proportional hazards survival analysis was conducted to compare survival times among the three ECOG performance scores. A proportional hazards test confirmed the proportionality assumption, <span class="math inline">\(\chi^2\)</span>(4) = 5.2, <em>p</em> = 0.264. Inspection of the deviance residuals confirmed there were no influential data points. The linearity assumption was confirmed by inspection of the Martingale residuals plotted against the continuous covariates. Censored cases were negatively associated with symptom severity, <em>ambulatory</em>, 1.51 (95% CI 1.02, 2.23; p=0.040), and <em>bedridden</em>, 2.50 (95% CI 1.60, 3.90; p&lt;0.001) study groups. Participants that were ambulatory had a hazard ratio (HR) of 1.51 (95% CI 1.02, 2.23; p=0.040) relative to the asymptomatic group. The bedridden group had an HR of 2.50 (95% CI 1.60, 3.90; p&lt;0.001). Sex female was protective against mortality, 0.58 (95% CI 0.41, 0.80; p=0.001).</p>
+</blockquote>
+</section>
+<section id="landmark-analysis" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="landmark-analysis"><span class="header-section-number">4.5</span> Landmark Analysis</h2>
+<p>A <strong>landmark</strong> analysis measures survival <em>after a milestone period</em>. E.g., I data set may have survival times after a disease onset, but a treatment typically starts after 90 days. In that case, you want to subset the persons surving at least 90 days and then subtract 90 from all the times. In a KM analysis manually adjust the data. In <code>coxph()</code> use the <code>subset</code> argument.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coxph</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Surv</span>(time, status) <span class="sc">~</span> age <span class="sc">+</span> sex <span class="sc">+</span> ph.ecog, </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">subset =</span> time <span class="sc">&gt;</span> <span class="dv">90</span>, </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> d_lung</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="time-dependent-covariates" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="time-dependent-covariates"><span class="header-section-number">4.6</span> Time-Dependent Covariates</h2>
+<p>If a covariate changes over time, you need to modify the underlying data set. <code>tmerge()</code> lengthens the data set for the relevant time spans for the time-dependent covariate. Helper functions <code>event()</code> and <code>tdc()</code> modify the outcome and time-dependent covariates.</p>
+<p>The BMT data set from the <strong>SemiCompRisks</strong> package is a good example. <code>T1</code> and <code>delta1</code> are the time and event indicator variables. <code>TA</code> and <code>deltaA</code> are time and event indicators for a secondary disease.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(BMT, <span class="at">package =</span> <span class="st">"SemiCompRisks"</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> BMT <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowid_to_column</span>(<span class="st">"subject_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(subject_id, T1, delta1, TA, deltaA)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>dat <span class="sc">%&gt;%</span> <span class="fu">filter</span>(subject_id <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">15</span>, <span class="dv">18</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  subject_id   T1 delta1   TA deltaA
+1          1 2081      0   67      1
+2          2 1602      0 1602      0
+3         15  418      1  418      0
+4         18  156      1   28      1</code></pre>
+</div>
+</div>
+<p><code>tmerge()</code> merges two data sets, usually the same ones, and expands the time/event vars.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>dat_2 <span class="ot">&lt;-</span> <span class="fu">tmerge</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data1 =</span> dat,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data2 =</span> dat,</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">id =</span> subject_id,</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">death =</span> <span class="fu">event</span>(T1, delta1),</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">agvhd =</span> <span class="fu">tdc</span>(TA)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>dat_2 <span class="sc">%&gt;%</span> <span class="fu">filter</span>(subject_id <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">15</span>, <span class="dv">18</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  subject_id   T1 delta1   TA deltaA tstart tstop death agvhd
+1          1 2081      0   67      1      0    67     0     0
+2          1 2081      0   67      1     67  2081     0     1
+3          2 1602      0 1602      0      0  1602     0     0
+4         15  418      1  418      0      0   418     1     0
+5         18  156      1   28      1      0    28     0     0
+6         18  156      1   28      1     28   156     1     1</code></pre>
+</div>
+</div>
+<p>Define the Cox model Surv object with the start and end times.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>dat_2 <span class="sc">%&gt;%</span> </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coxph</span>(<span class="fu">Surv</span>(<span class="at">time =</span> tstart, <span class="at">time2 =</span> tstop, <span class="at">event =</span> death) <span class="sc">~</span> agvhd, <span class="at">data =</span> .) <span class="sc">%&gt;%</span> </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  gtsummary<span class="sc">::</span><span class="fu">tbl_regression</span>(<span class="at">exp =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="wuiisvpkel" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#wuiisvpkel table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#wuiisvpkel thead, #wuiisvpkel tbody, #wuiisvpkel tfoot, #wuiisvpkel tr, #wuiisvpkel td, #wuiisvpkel th {
+  border-style: none;
+}
+
+#wuiisvpkel p {
+  margin: 0;
+  padding: 0;
+}
+
+#wuiisvpkel .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#wuiisvpkel .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#wuiisvpkel .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#wuiisvpkel .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#wuiisvpkel .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#wuiisvpkel .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wuiisvpkel .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#wuiisvpkel .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#wuiisvpkel .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#wuiisvpkel .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#wuiisvpkel .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#wuiisvpkel .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#wuiisvpkel .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#wuiisvpkel .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#wuiisvpkel .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#wuiisvpkel .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#wuiisvpkel .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#wuiisvpkel .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#wuiisvpkel .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wuiisvpkel .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#wuiisvpkel .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#wuiisvpkel .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#wuiisvpkel .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wuiisvpkel .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#wuiisvpkel .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#wuiisvpkel .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wuiisvpkel .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wuiisvpkel .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#wuiisvpkel .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wuiisvpkel .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#wuiisvpkel .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wuiisvpkel .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#wuiisvpkel .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wuiisvpkel .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#wuiisvpkel .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wuiisvpkel .gt_left {
+  text-align: left;
+}
+
+#wuiisvpkel .gt_center {
+  text-align: center;
+}
+
+#wuiisvpkel .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#wuiisvpkel .gt_font_normal {
+  font-weight: normal;
+}
+
+#wuiisvpkel .gt_font_bold {
+  font-weight: bold;
+}
+
+#wuiisvpkel .gt_font_italic {
+  font-style: italic;
+}
+
+#wuiisvpkel .gt_super {
+  font-size: 65%;
+}
+
+#wuiisvpkel .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#wuiisvpkel .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#wuiisvpkel .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#wuiisvpkel .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#wuiisvpkel .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#wuiisvpkel .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#wuiisvpkel .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#wuiisvpkel .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#wuiisvpkel div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+<tr class="header gt_col_headings">
+<th id="label" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col"><strong>Characteristic</strong></th>
+<th id="estimate" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col"><strong>HR</strong><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span></th>
+<th id="conf.low" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col"><strong>95% CI</strong><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span></th>
+<th id="p.value" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col"><strong>p-value</strong></th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="label">agvhd</td>
+<td class="gt_row gt_center" headers="estimate">1.40</td>
+<td class="gt_row gt_center" headers="conf.low">0.81, 2.43</td>
+<td class="gt_row gt_center" headers="p.value">0.2</td>
+</tr>
+</tbody><tfoot class="gt_footnotes">
+<tr class="even">
+<td colspan="4" class="gt_footnote"><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span> HR = Hazard Ratio, CI = Confidence Interval</td>
+</tr>
+</tfoot>
+
+</table>
+
+</div>
+</div>
+</div>
+<p>From <a href="https://www.emilyzabor.com/tutorials/survival_analysis_in_r_tutorial.html">Emily Zabor’s tutorial</a>, use a landmark analysis to visualize a covariate and Cox for modeling.</p>
+<p>The Cox model is valid under certain conditions.</p>
+<ul>
+<li>Censoring event causes should be independent of the event.</li>
+<li>There is a multiplicative relationship between the predictors and the hazard.</li>
+<li>The hazard ratio is constant over time.</li>
+</ul>
+
+
+<!-- -->
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Clark2003b" class="csl-entry" role="listitem">
+Bradburn, Clark, M. J. 2003. <span>“Survival Analysis Part II: Multivariate Data Analysis–an Introduction to Concepts and Methods.”</span> <em>British Journal of Cancer</em> 89 (3). <a href="https://doi.org/10.1038/sj.bjc.6601119">https://doi.org/10.1038/sj.bjc.6601119</a>.
+</div>
+<div id="ref-Laerd2015" class="csl-entry" role="listitem">
+Laerd. 2015. <em>Statistical Tutorials and Software Guides</em>. <a href="https://statistics.laerd.com/">https://statistics.laerd.com/</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./03-parametric.html" class="pagination-link" aria-label="Parametric">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Parametric</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./05-discrete-time.html" class="pagination-link" aria-label="Discrete-Time">
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Discrete-Time</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb19" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Cox Regression {#sec-semiparametric}</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="in">```{r message=FALSE, warning=FALSE, include=FALSE}</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="in">library(tidyverse)</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="in">library(scales)</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="in">library(survival)</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="in">library(survminer)</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="in">library(gtsummary)</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="in">library(SemiCompRisks)</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="in">detach("package:SemiCompRisks")</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="in">detach("package:MASS")</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>The KM curve with logrank test is a univariate analyses describing the effect of a single categorical factor variable on survival. Parametric and semi-parametric models, on the other hand, are able to describe the effect of *multiple* covariates. The Cox proportional hazards model is a semi-parametric model. The Cox model expresses the expected hazard, $h(t)$, as an unspecified baseline hazard, $h_0(t)$, multiplied by the exponential of a linear combination of parameters, $\psi = e^{X\beta}$.</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>$$h(t) = h_0(t) \cdot e^{X \beta} = \psi h_0(t).$$</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>$h_0(t)$ is unspecified because it cancels out of the model. To see this, consider a hypothetical data set where 6 participants are assumed to fall into one of two hazards: participants 1, 2, and 3 have $h_0$ and 4, 5, and 6 have $\psi h_0$. Working through the event occurrences, the survival function is the product of each of the failure probabilities. Suppose participant 1 fails first. $p_1 = \frac{h_0(t_1)}{3 \cdot h_0(t_1) + 3 \psi \cdot h_0(t_1)}$. Suppose participant 2 censors, then participant 4 fails. $p_2 = \frac{\psi h_0(t_2)}{1 \cdot h_0(t_2) + 3 \psi \cdot h_0(t_2)}$. Now participant 3 fails. $p_3 = \frac{h_0(t_3)}{1 \cdot h_0(t_3) + 2 \psi \cdot h_0(t_3)}$. Notice how $h_0(t)$ cancels in each ratio. The partial likelihood is the product of the failure probabilities, $L(\psi) = \frac{\psi}{(3 + 3 \psi)(1 + 3 \psi)(1 + 2 \psi)}$. </span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>Find the value of $\psi$ that maximizes $L(\psi)$. $L(\psi)$ is difficult to optimize, but its log is easier. $l(\beta) = X \beta - \log (3 + 3 e^{X\beta}) - \log (1 + 3 e^{X\beta}) - \log (1 + 2 e^{X\beta})$. A function searches for the $\beta$ producing the global max. $h_0(t)$, the baseline hazard, is estimated with non-parametric methods.</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>The Cox model is essentially a multiple linear regression of the log hazard on $X$, with the baseline hazard $h_0(t)$ acting as a time-dependent intercept term. The covariates act multiplicatively on the hazard at any point in time. Thus the hazard is *proportional* to the covariate values <span class="co">[</span><span class="ot">@Clark2003b</span><span class="co">]</span>. The proportionality of the model comes from the lack of time dependence in the $X$ variables. The ratio of the hazard functions of two individuals is </span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>$$\frac{h_i(t)}{h_j(t)} = \frac{h_0(t) \cdot e^{X_i \beta}}{h_0(t) \cdot e^{X_j \beta}} = e^{(\Delta X)\beta}.$$</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>The ratio of person *i*'s and person *j*'s hazard at any time *t* is a function of difference in the regression variables, not of *t*. I.e., *i*'s hazard is a constant proportion of *j*'s hazard.</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>There are three ways to test $H_0 : \beta = 0$: the Wald test, the score test, and the likelihood ratio test. </span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>The Wald test statistic is $Z = \hat{\beta} / se({\hat{\beta}})$. Calculate $se({\hat{\beta}})$ from the second derivative of $l(\beta)$. As with other Wald tests, the square of this standard normal random variable is distributed chi-square, so you can equivalently test whether $Z^2 &gt; \chi_{\alpha, 1}^2$.</span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>The score test compares the slope of $l(\beta)$ at $\beta = 0$ to 0. The test statistic is normally distributed, and again, its square is distributed chi-square.</span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>The likelihood ratio test statistic equals $2 <span class="co">[</span><span class="ot">l(\beta = \hat{\beta}) - l(\beta = 0)</span><span class="co">]</span>$. It has a chi-square distribution with one degree of freedom.</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>The Cox proportional hazards model is analogous to the <span class="co">[</span><span class="ot">logistic regression</span><span class="co">](https://bookdown.org/mpfoley1973/supervised-ml/generalized-linear-models-glm.html#logistic-regression)</span> model. Rearranging $h(t) = h_0(t) \cdot e^{X \beta}$,</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>$$\ln \left<span class="co">[</span><span class="ot"> \frac{h(t)}{h_0(t)} \right</span><span class="co">]</span> = X \beta.$$</span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>Whereas logistic regression predicts the *log odds* of the response, Cox regression predicts the *log relative hazard* (relative to the unspecified baseline) of the response. $\beta$ is the change in the log of the relative hazard associated with a one unit change in $X$. Its antilog is the hazard ratio (HR). A positive $e^{\beta_j}$ means the hazard increases with the covariate. </span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>\begin{eqnarray}</span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a>(x_b - x_a) \beta &amp;=&amp; \ln \left<span class="co">[</span><span class="ot"> \frac{h_b(t)}{h_0(t)} \right</span><span class="co">]</span> - \ln \left<span class="co">[</span><span class="ot"> \frac{h_a(t)}{h_0(t)} \right</span><span class="co">]</span> <span class="sc">\\</span></span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a>\beta &amp;=&amp; \ln \left<span class="co">[</span><span class="ot"> \frac{h_b(t)}{h_a(t)} \right</span><span class="co">]</span> <span class="sc">\\</span></span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>e^\beta &amp;=&amp; \frac{h_b(t)}{h_a(t)} <span class="sc">\\</span></span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a> &amp;=&amp; \mathrm{HR}</span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a>\end{eqnarray}</span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a><span class="in">```{r include=FALSE}</span></span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a><span class="in"># This is a copy/paste from the KM chapter.</span></span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a><span class="in">d_lung &lt;- survival::lung %&gt;%</span></span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a><span class="in">  filter(!is.na(ph.ecog)) %&gt;%</span></span>
+<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(</span></span>
+<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a><span class="in">    ph.ecog = factor(</span></span>
+<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a><span class="in">      ph.ecog,</span></span>
+<span id="cb19-58"><a href="#cb19-58" aria-hidden="true" tabindex="-1"></a><span class="in">      levels = c(0, 1, 2, 3, 4),</span></span>
+<span id="cb19-59"><a href="#cb19-59" aria-hidden="true" tabindex="-1"></a><span class="in">      labels = c("Asymptomatic", "Ambulatory", "In bed &lt;50%", "In bed &gt;50%", "Bedridden")),</span></span>
+<span id="cb19-60"><a href="#cb19-60" aria-hidden="true" tabindex="-1"></a><span class="in">    ph.ecog = fct_drop(ph.ecog),</span></span>
+<span id="cb19-61"><a href="#cb19-61" aria-hidden="true" tabindex="-1"></a><span class="in">    ph.ecog = fct_lump_n(ph.ecog, n = 2, other_level = "Bedridden"),</span></span>
+<span id="cb19-62"><a href="#cb19-62" aria-hidden="true" tabindex="-1"></a><span class="in">    sex = factor(sex, levels = c(1, 2), labels = c("Male", "Female")),</span></span>
+<span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a><span class="in">    age_bin = cut(age, breaks = c(38, 55, 65, 83)),</span></span>
+<span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a><span class="in">    patient_id = row_number()</span></span>
+<span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
+<span id="cb19-66"><a href="#cb19-66" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-67"><a href="#cb19-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-68"><a href="#cb19-68" aria-hidden="true" tabindex="-1"></a>The Cox proportional hazards model is demonstrated here with a case study using the <span class="in">`survival::lung`</span> data set used in @sec-km. The study investigated differences in all-cause mortality between men and women diagnosed with advanced lung cancer. <span class="in">`r nrow(d_lung) %&gt;% comma(1)`</span> participants aged <span class="in">`r min(d_lung$age)`</span> to <span class="in">`r max(d_lung$age)`</span> were monitored up to three years until time of death. The participants were segmented into three groups according to their ECOG performance score: *Asymptomatic*, symptomatic but completely *Ambulatory*, and *Bedridden* at least part of the day. Participants' age and gender were captured as controlling covariates. @tbl-04-smrystats presents the summary statistics of the data set.</span>
+<span id="cb19-69"><a href="#cb19-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-70"><a href="#cb19-70" aria-hidden="true" tabindex="-1"></a><span class="in">```{r tbl-04-smrystats}</span></span>
+<span id="cb19-71"><a href="#cb19-71" aria-hidden="true" tabindex="-1"></a><span class="in">#| tbl-cap: Summary statistics.</span></span>
+<span id="cb19-72"><a href="#cb19-72" aria-hidden="true" tabindex="-1"></a><span class="in">(t1 &lt;- d_lung %&gt;%</span></span>
+<span id="cb19-73"><a href="#cb19-73" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(status = factor(status, levels = c(1, 2), labels = c("censored", "died"))) %&gt;%</span></span>
+<span id="cb19-74"><a href="#cb19-74" aria-hidden="true" tabindex="-1"></a><span class="in">  tbl_summary(by = "ph.ecog", include = c(time, status, ph.ecog, age, sex)) %&gt;%</span></span>
+<span id="cb19-75"><a href="#cb19-75" aria-hidden="true" tabindex="-1"></a><span class="in">  add_overall()) %&gt;%</span></span>
+<span id="cb19-76"><a href="#cb19-76" aria-hidden="true" tabindex="-1"></a><span class="in">  as_flex_table() %&gt;%</span></span>
+<span id="cb19-77"><a href="#cb19-77" aria-hidden="true" tabindex="-1"></a><span class="in">  flextable::theme_zebra()</span></span>
+<span id="cb19-78"><a href="#cb19-78" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-79"><a href="#cb19-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-80"><a href="#cb19-80" aria-hidden="true" tabindex="-1"></a><span class="fu">## Fitting the Model</span></span>
+<span id="cb19-81"><a href="#cb19-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-82"><a href="#cb19-82" aria-hidden="true" tabindex="-1"></a>Fit a Cox proportional hazards model with <span class="in">`coxph()`</span>.</span>
+<span id="cb19-83"><a href="#cb19-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-86"><a href="#cb19-86" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb19-87"><a href="#cb19-87" aria-hidden="true" tabindex="-1"></a>cox_fit <span class="ot">&lt;-</span> <span class="fu">coxph</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> sex <span class="sc">+</span> ph.ecog <span class="sc">+</span> age, <span class="at">data =</span> d_lung)</span>
+<span id="cb19-88"><a href="#cb19-88" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cox_fit)</span>
+<span id="cb19-89"><a href="#cb19-89" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-90"><a href="#cb19-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-91"><a href="#cb19-91" aria-hidden="true" tabindex="-1"></a>A negative coefficient estimator means the hazard decreases with increasing values of the variable. Females have a log hazard of death equal to <span class="in">`coef(cox_fit)[1]`</span> = <span class="in">`r comma(coef(cox_fit)[1], .01)`</span> of that of males. The exponential is the hazard ratio, the effect-size of the covariate. Being female reduces the hazard by a factor of <span class="in">`exp(coef(cox_fit)[1])`</span> = <span class="in">`r comma(exp(coef(cox_fit)[1]), .01)`</span> (<span class="in">`r percent(1 - exp(coef(cox_fit)[1]), 1)`</span>). I.e., at any given time, <span class="in">`r comma(exp(coef(cox_fit)[1]), .01)`</span> times as many females die as males.</span>
+<span id="cb19-92"><a href="#cb19-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-93"><a href="#cb19-93" aria-hidden="true" tabindex="-1"></a>The last section of the summary object is the three tests for the overall significance of the model. These three methods are asymptotically equivalent. The Likelihood ratio test has better behavior for small sample sizes, so it is generally preferred. The p-values for all three overall tests (likelihood, Wald, and score) are significant, indicating that the model is significant (not all $\beta$ values are 0). </span>
+<span id="cb19-94"><a href="#cb19-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-95"><a href="#cb19-95" aria-hidden="true" tabindex="-1"></a>Use **gtsummary** to present the results.</span>
+<span id="cb19-96"><a href="#cb19-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-99"><a href="#cb19-99" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb19-100"><a href="#cb19-100" aria-hidden="true" tabindex="-1"></a><span class="fu">tbl_regression</span>(cox_fit, <span class="at">exponentiate =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb19-101"><a href="#cb19-101" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-102"><a href="#cb19-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-103"><a href="#cb19-103" aria-hidden="true" tabindex="-1"></a>Visualize the fitted Cox model for each risk group. Function <span class="in">`survfit()`</span> estimates survival at the mean values of covariates by default. That's usually not useful, so instead pass a data frame with test cases into the <span class="in">`newdata`</span> argument.</span>
+<span id="cb19-104"><a href="#cb19-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-107"><a href="#cb19-107" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb19-108"><a href="#cb19-108" aria-hidden="true" tabindex="-1"></a><span class="co"># Predictions will be for all levels of sex and ph.ecog, but only at the median</span></span>
+<span id="cb19-109"><a href="#cb19-109" aria-hidden="true" tabindex="-1"></a><span class="co"># age.</span></span>
+<span id="cb19-110"><a href="#cb19-110" aria-hidden="true" tabindex="-1"></a>new_dat <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb19-111"><a href="#cb19-111" aria-hidden="true" tabindex="-1"></a>  <span class="at">sex =</span> <span class="fu">levels</span>(d_lung<span class="sc">$</span>sex),</span>
+<span id="cb19-112"><a href="#cb19-112" aria-hidden="true" tabindex="-1"></a>  <span class="at">ph.ecog =</span> <span class="fu">levels</span>(d_lung<span class="sc">$</span>ph.ecog),</span>
+<span id="cb19-113"><a href="#cb19-113" aria-hidden="true" tabindex="-1"></a>  <span class="at">age =</span> <span class="fu">median</span>(d_lung<span class="sc">$</span>age)</span>
+<span id="cb19-114"><a href="#cb19-114" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb19-115"><a href="#cb19-115" aria-hidden="true" tabindex="-1"></a>  <span class="co"># strata is our key to join back to the fitted values.</span></span>
+<span id="cb19-116"><a href="#cb19-116" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">strata =</span> <span class="fu">as.factor</span>(<span class="fu">row_number</span>()))</span>
+<span id="cb19-117"><a href="#cb19-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-118"><a href="#cb19-118" aria-hidden="true" tabindex="-1"></a><span class="co"># Create fitted survival curves at the covariate presets.</span></span>
+<span id="cb19-119"><a href="#cb19-119" aria-hidden="true" tabindex="-1"></a>fit_curves <span class="ot">&lt;-</span> <span class="fu">survfit</span>(cox_fit, <span class="at">newdata =</span> new_dat, <span class="at">data =</span> d_lung)</span>
+<span id="cb19-120"><a href="#cb19-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-121"><a href="#cb19-121" aria-hidden="true" tabindex="-1"></a><span class="co"># `surv_summary()` is like `summary()` except that it includes risk table info,</span></span>
+<span id="cb19-122"><a href="#cb19-122" aria-hidden="true" tabindex="-1"></a><span class="co"># confidence interval attributes, and pivots the strata longer.</span></span>
+<span id="cb19-123"><a href="#cb19-123" aria-hidden="true" tabindex="-1"></a>surv_summary <span class="ot">&lt;-</span> <span class="fu">surv_summary</span>(fit_curves) <span class="sc">%&gt;%</span></span>
+<span id="cb19-124"><a href="#cb19-124" aria-hidden="true" tabindex="-1"></a>  <span class="co"># The cases are labeled "strata", but `survsummary()` doesn't label what the </span></span>
+<span id="cb19-125"><a href="#cb19-125" aria-hidden="true" tabindex="-1"></a>  <span class="co"># strata are! Get it from new_dat.</span></span>
+<span id="cb19-126"><a href="#cb19-126" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(new_dat, <span class="at">by =</span> <span class="st">"strata"</span>)</span>
+<span id="cb19-127"><a href="#cb19-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-128"><a href="#cb19-128" aria-hidden="true" tabindex="-1"></a><span class="co"># Now use ggplot() just like normal.</span></span>
+<span id="cb19-129"><a href="#cb19-129" aria-hidden="true" tabindex="-1"></a>median_line <span class="ot">&lt;-</span> surv_summary <span class="sc">%&gt;%</span> </span>
+<span id="cb19-130"><a href="#cb19-130" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(surv <span class="sc">&gt;=</span> .<span class="dv">5</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb19-131"><a href="#cb19-131" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(sex, ph.ecog) <span class="sc">%&gt;%</span> </span>
+<span id="cb19-132"><a href="#cb19-132" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">.groups =</span> <span class="st">"drop"</span>, <span class="at">max_t =</span> <span class="fu">max</span>(time))</span>
+<span id="cb19-133"><a href="#cb19-133" aria-hidden="true" tabindex="-1"></a>surv_summary <span class="sc">%&gt;%</span></span>
+<span id="cb19-134"><a href="#cb19-134" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> time, <span class="at">y =</span> surv)) <span class="sc">+</span></span>
+<span id="cb19-135"><a href="#cb19-135" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color =</span> ph.ecog)) <span class="sc">+</span></span>
+<span id="cb19-136"><a href="#cb19-136" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> lower, <span class="at">ymax =</span> upper, <span class="at">color =</span> ph.ecog, <span class="at">fill =</span> ph.ecog), </span>
+<span id="cb19-137"><a href="#cb19-137" aria-hidden="true" tabindex="-1"></a>              <span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
+<span id="cb19-138"><a href="#cb19-138" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(<span class="at">data =</span> median_line, </span>
+<span id="cb19-139"><a href="#cb19-139" aria-hidden="true" tabindex="-1"></a>               <span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">0</span>, <span class="at">xend =</span> max_t, <span class="at">y =</span> .<span class="dv">5</span>, <span class="at">yend =</span> .<span class="dv">5</span>),</span>
+<span id="cb19-140"><a href="#cb19-140" aria-hidden="true" tabindex="-1"></a>               <span class="at">linetype =</span> <span class="dv">2</span>, <span class="at">color =</span> <span class="st">"gray40"</span>) <span class="sc">+</span></span>
+<span id="cb19-141"><a href="#cb19-141" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(<span class="at">data =</span> median_line, </span>
+<span id="cb19-142"><a href="#cb19-142" aria-hidden="true" tabindex="-1"></a>               <span class="fu">aes</span>(<span class="at">x =</span> max_t, <span class="at">xend =</span> max_t, <span class="at">y =</span> <span class="dv">0</span>, <span class="at">yend =</span> .<span class="dv">5</span>, <span class="at">color =</span> ph.ecog),</span>
+<span id="cb19-143"><a href="#cb19-143" aria-hidden="true" tabindex="-1"></a>               <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb19-144"><a href="#cb19-144" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="at">facets =</span> <span class="fu">vars</span>(sex)) <span class="sc">+</span></span>
+<span id="cb19-145"><a href="#cb19-145" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> <span class="fu">percent_format</span>(<span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb19-146"><a href="#cb19-146" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_light</span>() <span class="sc">+</span></span>
+<span id="cb19-147"><a href="#cb19-147" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>) <span class="sc">+</span></span>
+<span id="cb19-148"><a href="#cb19-148" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">X =</span> <span class="st">"Time"</span>, <span class="at">y =</span> <span class="st">"Survival Probability"</span>, <span class="at">color =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>,</span>
+<span id="cb19-149"><a href="#cb19-149" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Cox fitted model"</span>,</span>
+<span id="cb19-150"><a href="#cb19-150" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Age held at median."</span>)</span>
+<span id="cb19-151"><a href="#cb19-151" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-152"><a href="#cb19-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-153"><a href="#cb19-153" aria-hidden="true" tabindex="-1"></a><span class="fu">## Assumptions</span></span>
+<span id="cb19-154"><a href="#cb19-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-155"><a href="#cb19-155" aria-hidden="true" tabindex="-1"></a>A Cox proportional hazards model analysis is valid under the following conditions (<span class="co">[</span><span class="ot">Ref1</span><span class="co">](https://timeseriesreasoning.com/contents/schoenfeld-residuals/)</span>, <span class="co">[</span><span class="ot">Ref2</span><span class="co">](https://www.r-bloggers.com/2016/12/cox-model-assumptions/)</span>).</span>
+<span id="cb19-156"><a href="#cb19-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-157"><a href="#cb19-157" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Hazards are proportional**. At any time *t*, all individuals experience a multiple of the same baseline hazard, $h_0(t)$.</span>
+<span id="cb19-158"><a href="#cb19-158" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Covariates are time invariant**. Covariate values do not vary with time. Age *at onset* is time invariant, but age is not. See @sec-time-dependent-covariates for how to model with time dependent covariates.</span>
+<span id="cb19-159"><a href="#cb19-159" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Coefficients are time invariant**. The regression coefficients, $\beta$, do not vary with time.</span>
+<span id="cb19-160"><a href="#cb19-160" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Influential data points are explained**. Outliers that are influential are confirmed to be valid (non-spurious) data.</span>
+<span id="cb19-161"><a href="#cb19-161" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Covariates and log hazard are linearly related**. </span>
+<span id="cb19-162"><a href="#cb19-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-163"><a href="#cb19-163" aria-hidden="true" tabindex="-1"></a>Test the proportionality and time invariance assumptions with Schoenfeld residuals. Schoenfeld residuals are like normal residuals ($y$ vs $\hat{y}$) except that they predict $X$ and compare $\hat{X}$ to $X$. Shoenfeld residuals have three important properties. </span>
+<span id="cb19-164"><a href="#cb19-164" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>The residuals are uncorrelated with each other if Cox model assumptions hold. Test for this with an auto-correlation plot or a white noise test such as the Ljung-Box test.</span>
+<span id="cb19-165"><a href="#cb19-165" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>The residuals are time-independent. Test for this with a plot the residuals versus will.</span>
+<span id="cb19-166"><a href="#cb19-166" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>The mean of the scaled residuals is zero if $\beta$ is time-independent. Test with a Chi-square test.</span>
+<span id="cb19-167"><a href="#cb19-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-168"><a href="#cb19-168" aria-hidden="true" tabindex="-1"></a>The function <span class="in">`survival::cox.zph()`</span> correlates the corresponding set of scaled Schoenfeld residuals with time. If the hazards are time-invariant, the coefficient estimates will be zero. <span class="in">`cox.zph()`</span> *p*-values &lt; .05 mean the slope *is* non-zero. Below, the test is not statistically significant for each of the covariates, and the global test is also not statistically significant, so the proportional hazards assumption holds.</span>
+<span id="cb19-169"><a href="#cb19-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-172"><a href="#cb19-172" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb19-173"><a href="#cb19-173" aria-hidden="true" tabindex="-1"></a>(cox_test_ph <span class="ot">&lt;-</span> <span class="fu">cox.zph</span>(cox_fit))</span>
+<span id="cb19-174"><a href="#cb19-174" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-175"><a href="#cb19-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-176"><a href="#cb19-176" aria-hidden="true" tabindex="-1"></a>Use <span class="in">`ggcoxzph()`</span> to plot the residuals.</span>
+<span id="cb19-177"><a href="#cb19-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-178"><a href="#cb19-178" aria-hidden="true" tabindex="-1"></a><span class="in">```{r fig.height=8}</span></span>
+<span id="cb19-179"><a href="#cb19-179" aria-hidden="true" tabindex="-1"></a><span class="in">ggcoxzph(cox_test_ph) </span></span>
+<span id="cb19-180"><a href="#cb19-180" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-181"><a href="#cb19-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-182"><a href="#cb19-182" aria-hidden="true" tabindex="-1"></a>Test the influential observations using the <span class="in">`survminer::ggcoxdiagnostics()`</span> function with parameter <span class="in">`type = “dfbeta”`</span>. The plots show the estimated changes in the regression coefficients from deleting each observation in turn. Compare the magnitudes of the largest dfbeta values to the regression coefficients. In this case, none of the observations is very influential.</span>
+<span id="cb19-183"><a href="#cb19-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-186"><a href="#cb19-186" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb19-187"><a href="#cb19-187" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcoxdiagnostics</span>(cox_fit, <span class="at">type =</span> <span class="st">"dfbeta"</span>, <span class="at">linear.predictions =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb19-188"><a href="#cb19-188" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-189"><a href="#cb19-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-190"><a href="#cb19-190" aria-hidden="true" tabindex="-1"></a>Alternatively, test for influential observations with deviance residuals. Deviance residuals are a normalized transformation of the Martingale residuals. Deviance residuals should be symmetrically distributed about zero with a standard deviation of 1.</span>
+<span id="cb19-191"><a href="#cb19-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-194"><a href="#cb19-194" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb19-195"><a href="#cb19-195" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcoxdiagnostics</span>(cox_fit, <span class="at">type =</span> <span class="st">"deviance"</span>, <span class="at">linear.predictions =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb19-196"><a href="#cb19-196" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-197"><a href="#cb19-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-198"><a href="#cb19-198" aria-hidden="true" tabindex="-1"></a>Test the linearity assumption by plotting the Martingale residuals against the continuous covariates to ensure there are no patterns (nonlinearity is not an issue for categorical variables). Martingale residuals range (-Inf, +1). Values near 1 mean the even occurred too soon, and values near -Inf mean the event occurred too late. Use the <span class="in">`survminer::ggcoxfunctional()`</span> function. Fitted lines with lowess function should be linear to satisfy the Cox proportional hazards model assumptions.</span>
+<span id="cb19-199"><a href="#cb19-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-202"><a href="#cb19-202" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb19-203"><a href="#cb19-203" aria-hidden="true" tabindex="-1"></a>tmp_fit <span class="ot">&lt;-</span> <span class="fu">coxph</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> age, <span class="at">data =</span> d_lung)</span>
+<span id="cb19-204"><a href="#cb19-204" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcoxfunctional</span>(<span class="at">fit =</span> tmp_fit, <span class="at">data =</span> d_lung)</span>
+<span id="cb19-205"><a href="#cb19-205" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-206"><a href="#cb19-206" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-207"><a href="#cb19-207" aria-hidden="true" tabindex="-1"></a><span class="fu">## Interpreting Results</span></span>
+<span id="cb19-208"><a href="#cb19-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-209"><a href="#cb19-209" aria-hidden="true" tabindex="-1"></a>Table @tbl-cox_result shows the effect sizes as hazard ratios with 95% confidence intervals (CI) for each covariate in relation to overall survival. Each factor is assessed through separate univariate Cox regressions. All three factors of the multivariate model show how the factors jointly impact on survival. Being famale increased survival, abd higher ECOG scores impaired survival. Age was not statistically different from zero (at the .05 level). The *p*-values for the comparisons between each ECOG type are presented, but it is possible to also show an overall likelihood ratio test for the differences between the categories as a whole.</span>
+<span id="cb19-210"><a href="#cb19-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-211"><a href="#cb19-211" aria-hidden="true" tabindex="-1"></a><span class="in">```{r tbl-cox-result}</span></span>
+<span id="cb19-212"><a href="#cb19-212" aria-hidden="true" tabindex="-1"></a><span class="in">#| tbl-cap: Hazard ratios from Cox PH model for lung dataset.</span></span>
+<span id="cb19-213"><a href="#cb19-213" aria-hidden="true" tabindex="-1"></a><span class="in">sex_gt &lt;- coxph(Surv(time, status) ~ sex, data = d_lung) %&gt;%</span></span>
+<span id="cb19-214"><a href="#cb19-214" aria-hidden="true" tabindex="-1"></a><span class="in">  tbl_regression(exponentiate = TRUE)</span></span>
+<span id="cb19-215"><a href="#cb19-215" aria-hidden="true" tabindex="-1"></a><span class="in">ph.ecog_gt &lt;- coxph(Surv(time, status) ~ ph.ecog, data = d_lung) %&gt;%</span></span>
+<span id="cb19-216"><a href="#cb19-216" aria-hidden="true" tabindex="-1"></a><span class="in">  tbl_regression(exponentiate = TRUE)</span></span>
+<span id="cb19-217"><a href="#cb19-217" aria-hidden="true" tabindex="-1"></a><span class="in">age_gt &lt;- coxph(Surv(time, status) ~ age, data = d_lung) %&gt;%</span></span>
+<span id="cb19-218"><a href="#cb19-218" aria-hidden="true" tabindex="-1"></a><span class="in">  tbl_regression(exponentiate = TRUE)</span></span>
+<span id="cb19-219"><a href="#cb19-219" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-220"><a href="#cb19-220" aria-hidden="true" tabindex="-1"></a><span class="in">cox_uni_gt &lt;- gtsummary::tbl_stack(list(sex_gt, ph.ecog_gt, age_gt))</span></span>
+<span id="cb19-221"><a href="#cb19-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-222"><a href="#cb19-222" aria-hidden="true" tabindex="-1"></a><span class="in">cox_multi_gt &lt;- tbl_regression(cox_fit, exponentiate = TRUE)</span></span>
+<span id="cb19-223"><a href="#cb19-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-224"><a href="#cb19-224" aria-hidden="true" tabindex="-1"></a><span class="in">gtsummary::tbl_merge(</span></span>
+<span id="cb19-225"><a href="#cb19-225" aria-hidden="true" tabindex="-1"></a><span class="in">  list(cox_uni_gt, cox_multi_gt),</span></span>
+<span id="cb19-226"><a href="#cb19-226" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_spanner = c("Univariate analysis", "Multivaraite analysis")</span></span>
+<span id="cb19-227"><a href="#cb19-227" aria-hidden="true" tabindex="-1"></a><span class="in">) %&gt;%</span></span>
+<span id="cb19-228"><a href="#cb19-228" aria-hidden="true" tabindex="-1"></a><span class="in">  gtsummary::as_flex_table() %&gt;%</span></span>
+<span id="cb19-229"><a href="#cb19-229" aria-hidden="true" tabindex="-1"></a><span class="in">  flextable::theme_zebra() %&gt;%</span></span>
+<span id="cb19-230"><a href="#cb19-230" aria-hidden="true" tabindex="-1"></a><span class="in">  flextable::set_caption("Hazard ratios from Cox PH model for lung dataset.")</span></span>
+<span id="cb19-231"><a href="#cb19-231" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-232"><a href="#cb19-232" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-233"><a href="#cb19-233" aria-hidden="true" tabindex="-1"></a><span class="fu">## Reporting </span></span>
+<span id="cb19-234"><a href="#cb19-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-235"><a href="#cb19-235" aria-hidden="true" tabindex="-1"></a>The guidelines for reporting the Kaplan-Meier test are from Laerd's Kaplan-Meier using SPSS Statistics <span class="co">[</span><span class="ot">@Laerd2015</span><span class="co">]</span>. Report the results like this.</span>
+<span id="cb19-236"><a href="#cb19-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-237"><a href="#cb19-237" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; </span><span class="in">`r nrow(d_lung) %&gt;% comma(1)`</span><span class="at"> Men and women diagnosed with advanced lung cancer aged </span><span class="in">`r min(d_lung$age)`</span><span class="at"> to </span><span class="in">`r max(d_lung$age)`</span><span class="at"> were monitored up to three years until time of death. Participants were classified into three groups according to their ECOG performance score: *asymptomatic* (n = `r d_lung %&gt;% count(ph.ecog) %&gt;% filter(ph.ecog == "Asymptomatic") %&gt;% pull(n)`), *symptomatic but completely ambulatory* (n = `r d_lung %&gt;% count(ph.ecog) %&gt;% filter(ph.ecog == "Ambulatory") %&gt;% pull(n)`), and *bedridden at least part of the day* (n = `r d_lung %&gt;% count(ph.ecog) %&gt;% filter(ph.ecog == "Bedridden") %&gt;% pull(n)`). A Cox proportional hazards survival analysis was conducted to compare survival times among the three ECOG performance scores. A proportional hazards test confirmed the proportionality assumption, $\chi^2$(`r cox_test_ph$table[4, 2]`) = `r cox_test_ph$table[4, 1] %&gt;% number(.1)`, *p* = `r cox_test_ph$table[4, 3] %&gt;% comma(.001)`. Inspection of the deviance residuals confirmed there were no influential data points. The linearity assumption was confirmed by inspection of the Martingale residuals plotted against the continuous covariates. Censored cases were negatively associated with symptom severity, *ambulatory*, `r gtsummary::inline_text(cox_multi_gt, variable = ph.ecog, level = "Ambulatory")`, and *bedridden*, </span><span class="in">`r gtsummary::inline_text(cox_multi_gt, variable = ph.ecog, level = "Bedridden")`</span><span class="at"> study groups. Participants that were ambulatory had a hazard ratio (HR) of </span><span class="in">`r inline_text(cox_multi_gt, "ph.ecog", level = "Ambulatory")`</span><span class="at"> relative to the asymptomatic group. The bedridden group had an HR of </span><span class="in">`r inline_text(cox_multi_gt, "ph.ecog", level = "Bedridden")`</span><span class="at">. Sex female was protective against mortality, </span><span class="in">`r inline_text(cox_multi_gt, "sex", level = "Female")`</span><span class="at">. </span></span>
+<span id="cb19-238"><a href="#cb19-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-239"><a href="#cb19-239" aria-hidden="true" tabindex="-1"></a><span class="fu">## Landmark Analysis</span></span>
+<span id="cb19-240"><a href="#cb19-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-241"><a href="#cb19-241" aria-hidden="true" tabindex="-1"></a>A **landmark** analysis measures survival *after a milestone period*. E.g., I data set may have survival times after a disease onset, but a treatment typically starts after 90 days. In that case, you want to subset the persons surving at least 90 days and then subtract 90 from all the times. In a KM analysis manually adjust the data. In <span class="in">`coxph()`</span> use the <span class="in">`subset`</span> argument.</span>
+<span id="cb19-242"><a href="#cb19-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-243"><a href="#cb19-243" aria-hidden="true" tabindex="-1"></a><span class="in">```{r eval=FALSE}</span></span>
+<span id="cb19-244"><a href="#cb19-244" aria-hidden="true" tabindex="-1"></a><span class="in">coxph(</span></span>
+<span id="cb19-245"><a href="#cb19-245" aria-hidden="true" tabindex="-1"></a><span class="in">  Surv(time, status) ~ age + sex + ph.ecog, </span></span>
+<span id="cb19-246"><a href="#cb19-246" aria-hidden="true" tabindex="-1"></a><span class="in">  subset = time &gt; 90, </span></span>
+<span id="cb19-247"><a href="#cb19-247" aria-hidden="true" tabindex="-1"></a><span class="in">  data = d_lung</span></span>
+<span id="cb19-248"><a href="#cb19-248" aria-hidden="true" tabindex="-1"></a><span class="in">)</span></span>
+<span id="cb19-249"><a href="#cb19-249" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-250"><a href="#cb19-250" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-251"><a href="#cb19-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-252"><a href="#cb19-252" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-253"><a href="#cb19-253" aria-hidden="true" tabindex="-1"></a><span class="fu">## Time-Dependent Covariates {#time-dependent-covariates}</span></span>
+<span id="cb19-254"><a href="#cb19-254" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-255"><a href="#cb19-255" aria-hidden="true" tabindex="-1"></a>If a covariate changes over time, you need to modify the underlying data set. <span class="in">`tmerge()`</span> lengthens the data set for the relevant time spans for the time-dependent covariate. Helper functions <span class="in">`event()`</span> and <span class="in">`tdc()`</span> modify the outcome and time-dependent covariates.</span>
+<span id="cb19-256"><a href="#cb19-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-257"><a href="#cb19-257" aria-hidden="true" tabindex="-1"></a>The BMT data set from the **SemiCompRisks** package is a good example. <span class="in">`T1`</span> and <span class="in">`delta1`</span> are the time and event indicator variables. <span class="in">`TA`</span> and <span class="in">`deltaA`</span> are time and event indicators for a secondary disease.</span>
+<span id="cb19-258"><a href="#cb19-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-261"><a href="#cb19-261" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb19-262"><a href="#cb19-262" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(BMT, <span class="at">package =</span> <span class="st">"SemiCompRisks"</span>)</span>
+<span id="cb19-263"><a href="#cb19-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-264"><a href="#cb19-264" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> BMT <span class="sc">%&gt;%</span></span>
+<span id="cb19-265"><a href="#cb19-265" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowid_to_column</span>(<span class="st">"subject_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb19-266"><a href="#cb19-266" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(subject_id, T1, delta1, TA, deltaA)</span>
+<span id="cb19-267"><a href="#cb19-267" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-268"><a href="#cb19-268" aria-hidden="true" tabindex="-1"></a>dat <span class="sc">%&gt;%</span> <span class="fu">filter</span>(subject_id <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">15</span>, <span class="dv">18</span>))</span>
+<span id="cb19-269"><a href="#cb19-269" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-270"><a href="#cb19-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-271"><a href="#cb19-271" aria-hidden="true" tabindex="-1"></a><span class="in">`tmerge()`</span> merges two data sets, usually the same ones, and expands the time/event vars.</span>
+<span id="cb19-272"><a href="#cb19-272" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-275"><a href="#cb19-275" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb19-276"><a href="#cb19-276" aria-hidden="true" tabindex="-1"></a>dat_2 <span class="ot">&lt;-</span> <span class="fu">tmerge</span>(</span>
+<span id="cb19-277"><a href="#cb19-277" aria-hidden="true" tabindex="-1"></a>  <span class="at">data1 =</span> dat,</span>
+<span id="cb19-278"><a href="#cb19-278" aria-hidden="true" tabindex="-1"></a>  <span class="at">data2 =</span> dat,</span>
+<span id="cb19-279"><a href="#cb19-279" aria-hidden="true" tabindex="-1"></a>  <span class="at">id =</span> subject_id,</span>
+<span id="cb19-280"><a href="#cb19-280" aria-hidden="true" tabindex="-1"></a>  <span class="at">death =</span> <span class="fu">event</span>(T1, delta1),</span>
+<span id="cb19-281"><a href="#cb19-281" aria-hidden="true" tabindex="-1"></a>  <span class="at">agvhd =</span> <span class="fu">tdc</span>(TA)</span>
+<span id="cb19-282"><a href="#cb19-282" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-283"><a href="#cb19-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-284"><a href="#cb19-284" aria-hidden="true" tabindex="-1"></a>dat_2 <span class="sc">%&gt;%</span> <span class="fu">filter</span>(subject_id <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">15</span>, <span class="dv">18</span>))</span>
+<span id="cb19-285"><a href="#cb19-285" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-286"><a href="#cb19-286" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-287"><a href="#cb19-287" aria-hidden="true" tabindex="-1"></a>Define the Cox model Surv object with the start and end times.</span>
+<span id="cb19-288"><a href="#cb19-288" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-291"><a href="#cb19-291" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb19-292"><a href="#cb19-292" aria-hidden="true" tabindex="-1"></a>dat_2 <span class="sc">%&gt;%</span> </span>
+<span id="cb19-293"><a href="#cb19-293" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coxph</span>(<span class="fu">Surv</span>(<span class="at">time =</span> tstart, <span class="at">time2 =</span> tstop, <span class="at">event =</span> death) <span class="sc">~</span> agvhd, <span class="at">data =</span> .) <span class="sc">%&gt;%</span> </span>
+<span id="cb19-294"><a href="#cb19-294" aria-hidden="true" tabindex="-1"></a>  gtsummary<span class="sc">::</span><span class="fu">tbl_regression</span>(<span class="at">exp =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb19-295"><a href="#cb19-295" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-296"><a href="#cb19-296" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-297"><a href="#cb19-297" aria-hidden="true" tabindex="-1"></a>From <span class="co">[</span><span class="ot">Emily Zabor's tutorial</span><span class="co">](https://www.emilyzabor.com/tutorials/survival_analysis_in_r_tutorial.html)</span>, use a landmark analysis to visualize a covariate and Cox for modeling.</span>
+<span id="cb19-298"><a href="#cb19-298" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-299"><a href="#cb19-299" aria-hidden="true" tabindex="-1"></a>The Cox model is valid under certain conditions.</span>
+<span id="cb19-300"><a href="#cb19-300" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-301"><a href="#cb19-301" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Censoring event causes should be independent of the event.</span>
+<span id="cb19-302"><a href="#cb19-302" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>There is a multiplicative relationship between the predictors and the hazard.</span>
+<span id="cb19-303"><a href="#cb19-303" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>The hazard ratio is constant over time.</span>
+</code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

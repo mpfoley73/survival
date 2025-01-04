@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>2&nbsp; Kaplan-Meier – Survival Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./03-parametric.html" rel="next">
+<link href="./01-concepts.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link href="site_libs/tabwid-1.1.3/tabwid.css" rel="stylesheet">
+
+<script src="site_libs/tabwid-1.1.3/tabwid.js"></script>
+
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./02-km.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Kaplan-Meier</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Survival Analysis</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-concepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Concepts</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-km.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Kaplan-Meier</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-parametric.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Parametric</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-cox.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Cox Regression</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-discrete-time.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Discrete-Time</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Machine Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-case-study.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Case Study</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#assumptions" id="toc-assumptions" class="nav-link active" data-scroll-target="#assumptions"><span class="header-section-number">2.1</span> Assumptions</a></li>
+  <li><a href="#fitting-the-model" id="toc-fitting-the-model" class="nav-link" data-scroll-target="#fitting-the-model"><span class="header-section-number">2.2</span> Fitting the Model</a></li>
+  <li><a href="#interpreting-results" id="toc-interpreting-results" class="nav-link" data-scroll-target="#interpreting-results"><span class="header-section-number">2.3</span> Interpreting Results</a></li>
+  <li><a href="#reporting" id="toc-reporting" class="nav-link" data-scroll-target="#reporting"><span class="header-section-number">2.4</span> Reporting</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span id="sec-km" class="quarto-section-identifier"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Kaplan-Meier</span></span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survival)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survminer)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gtsummary)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Survival data are generally described and modeled in terms of the survivor function and the hazard function. The survivor function <span class="math inline">\(S(t)\)</span> is the probability of surviving to some time beyond <em>t</em> and is usually estimated by the Kaplan-Meier (KM) method. The log-rank test is then used to test for differences between survival curves for treatment groups. The hazard function <span class="math inline">\(h(t)\)</span> is the instantaneous event rate at <em>t</em> given survival up to <em>t</em>. It is primarily as a diagnostic tool. KM analyses are limited, however, because they cannot adjust for subject-related confounding variables such as age or gender. To adjust for covariates, a multivariate survival analysis such as the parametric and semi-parametric models is necessary <span class="citation" data-cites="Clark2003a">(<a href="08-references.html#ref-Clark2003a" role="doc-biblioref">Clark 2003</a>)</span>.</p>
+<p>The KM estimator for the survival function is the product over failure times of the conditional probabilities of surviving to the next failure time.</p>
+<p><span class="math display">\[\hat{S}(t) = \prod_{i: t_i &lt; t}{\frac{n_i - d_i}{n_i}}\]</span></p>
+<p>where <span class="math inline">\(n_i\)</span> is the number of subjects at risk at time <span class="math inline">\(i\)</span> and <span class="math inline">\(d_i\)</span> is the number incurring the event. I.e., <span class="math inline">\(\hat{S}(t)\)</span> is the sum-product of the survival proportions at each time interval, the cumulative survival probability. The KM curve falls only when an event occurs, not when a subject is censored. Confidence limits are calculated using the “delta” method to obtain the variance of <span class="math inline">\(\log \hat{S}(t)\)</span>.</p>
+<p>The KM method is demonstrated here with a case study using the <code>survival::lung</code> data set.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>d_lung <span class="ot">&lt;-</span> survival<span class="sc">::</span>lung <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ph.ecog)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">ph.ecog =</span> <span class="fu">factor</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      ph.ecog,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Asymptomatic"</span>, <span class="st">"Ambulatory"</span>, <span class="st">"In bed &lt;50%"</span>, <span class="st">"In bed &gt;50%"</span>, <span class="st">"Bedridden"</span>)),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">ph.ecog =</span> <span class="fu">fct_drop</span>(ph.ecog),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">ph.ecog =</span> <span class="fu">fct_lump_n</span>(ph.ecog, <span class="at">n =</span> <span class="dv">2</span>, <span class="at">other_level =</span> <span class="st">"Bedridden"</span>),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">sex =</span> <span class="fu">factor</span>(sex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Male"</span>, <span class="st">"Female"</span>)),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">age_bin =</span> <span class="fu">cut</span>(age, <span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">38</span>, <span class="dv">55</span>, <span class="dv">65</span>, <span class="dv">83</span>)),</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">patient_id =</span> <span class="fu">row_number</span>()</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The study investigated differences in all-cause mortality between men and women diagnosed with advanced lung cancer. 227 participants aged 39 to 82 were monitored up to three years until time of death. The participants were segmented into three groups according to their ECOG performance score: <em>Asymptomatic</em>, symptomatic but completely <em>Ambulatory</em>, and <em>Bedridden</em> at least part of the day. Participants’ age and gender were captured as possible controlling covariates, but will not be used here since a KM analysis is only able to compare the distributions among levels of a single factor. Table @ref(tab:tbl01-smrystats) presents the summary statistics of the data set.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(t1 <span class="ot">&lt;-</span> d_lung <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">status =</span> <span class="fu">factor</span>(status, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"censored"</span>, <span class="st">"died"</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tbl_summary</span>(<span class="at">by =</span> <span class="st">"ph.ecog"</span>, <span class="at">include =</span> <span class="fu">c</span>(time, status, ph.ecog, age, sex)) <span class="sc">%&gt;%</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_overall</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_flex_table</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  flextable<span class="sc">::</span><span class="fu">set_caption</span>(<span class="st">"Summary statistics."</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  flextable<span class="sc">::</span><span class="fu">theme_zebra</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="tabwid"><style>.cl-1800d624{}.cl-17f95ed0{font-family:'Arial';font-size:11pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-17f95ee4{font-family:'Arial';font-size:6.6pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;position: relative;bottom:3.3pt;}.cl-17f95eee{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-17fbeb0a{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:2pt;padding-top:2pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-17fbeb14{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-17fbeb15{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:15pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-17fbeb1e{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-17fc0590{width:1.304in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc059a{width:1.279in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc059b{width:1.423in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05a4{width:1.194in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05a5{width:1.304in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05ae{width:1.279in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05af{width:1.423in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05b0{width:1.194in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05b8{width:1.304in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05c2{width:1.279in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05c3{width:1.423in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05c4{width:1.194in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05cc{width:1.304in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05cd{width:1.279in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05ce{width:1.423in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05cf{width:1.194in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05d6{width:1.304in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05d7{width:1.279in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05d8{width:1.423in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05d9{width:1.194in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05e0{width:1.304in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05e1{width:1.279in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05e2{width:1.423in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-17fc05e3{width:1.194in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing="true" class="cl-1800d624"><thead><tr style="overflow-wrap:break-word;"><th class="cl-17fc0590"><p class="cl-17fbeb0a"><span class="cl-17f95ed0">Characteristic</span></p></th><th class="cl-17fc059a"><p class="cl-17fbeb0a"><span class="cl-17f95ed0">Overall</span><span class="cl-17f95ed0">  </span><br><span class="cl-17f95ed0">N = 227</span><span class="cl-17f95ee4">1</span></p></th><th class="cl-17fc059b"><p class="cl-17fbeb0a"><span class="cl-17f95ed0">Asymptomatic</span><span class="cl-17f95ed0">  </span><br><span class="cl-17f95ed0">N = 63</span><span class="cl-17f95ee4">1</span></p></th><th class="cl-17fc059a"><p class="cl-17fbeb0a"><span class="cl-17f95ed0">Ambulatory</span><span class="cl-17f95ed0">  </span><br><span class="cl-17f95ed0">N = 113</span><span class="cl-17f95ee4">1</span></p></th><th class="cl-17fc05a4"><p class="cl-17fbeb0a"><span class="cl-17f95ed0">Bedridden</span><span class="cl-17f95ed0">  </span><br><span class="cl-17f95ed0">N = 51</span><span class="cl-17f95ee4">1</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-17fc05a5"><p class="cl-17fbeb14"><span class="cl-17f95eee">time</span></p></td><td class="cl-17fc05ae"><p class="cl-17fbeb14"><span class="cl-17f95eee">259 (167, 404)</span></p></td><td class="cl-17fc05af"><p class="cl-17fbeb14"><span class="cl-17f95eee">303 (224, 442)</span></p></td><td class="cl-17fc05ae"><p class="cl-17fbeb14"><span class="cl-17f95eee">243 (177, 426)</span></p></td><td class="cl-17fc05b0"><p class="cl-17fbeb14"><span class="cl-17f95eee">180 (95, 310)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-17fc05b8"><p class="cl-17fbeb14"><span class="cl-17f95eee">status</span></p></td><td class="cl-17fc05c2"><p class="cl-17fbeb14"><span class="cl-17f95eee"></span></p></td><td class="cl-17fc05c3"><p class="cl-17fbeb14"><span class="cl-17f95eee"></span></p></td><td class="cl-17fc05c2"><p class="cl-17fbeb14"><span class="cl-17f95eee"></span></p></td><td class="cl-17fc05c4"><p class="cl-17fbeb14"><span class="cl-17f95eee"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-17fc05a5"><p class="cl-17fbeb15"><span class="cl-17f95eee">censored</span></p></td><td class="cl-17fc05ae"><p class="cl-17fbeb14"><span class="cl-17f95eee">63 (28%)</span></p></td><td class="cl-17fc05af"><p class="cl-17fbeb14"><span class="cl-17f95eee">26 (41%)</span></p></td><td class="cl-17fc05ae"><p class="cl-17fbeb14"><span class="cl-17f95eee">31 (27%)</span></p></td><td class="cl-17fc05b0"><p class="cl-17fbeb14"><span class="cl-17f95eee">6 (12%)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-17fc05cc"><p class="cl-17fbeb15"><span class="cl-17f95eee">died</span></p></td><td class="cl-17fc05cd"><p class="cl-17fbeb14"><span class="cl-17f95eee">164 (72%)</span></p></td><td class="cl-17fc05ce"><p class="cl-17fbeb14"><span class="cl-17f95eee">37 (59%)</span></p></td><td class="cl-17fc05cd"><p class="cl-17fbeb14"><span class="cl-17f95eee">82 (73%)</span></p></td><td class="cl-17fc05cf"><p class="cl-17fbeb14"><span class="cl-17f95eee">45 (88%)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-17fc05a5"><p class="cl-17fbeb14"><span class="cl-17f95eee">age</span></p></td><td class="cl-17fc05ae"><p class="cl-17fbeb14"><span class="cl-17f95eee">63 (56, 69)</span></p></td><td class="cl-17fc05af"><p class="cl-17fbeb14"><span class="cl-17f95eee">61 (56, 68)</span></p></td><td class="cl-17fc05ae"><p class="cl-17fbeb14"><span class="cl-17f95eee">63 (55, 68)</span></p></td><td class="cl-17fc05b0"><p class="cl-17fbeb14"><span class="cl-17f95eee">68 (60, 73)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-17fc05d6"><p class="cl-17fbeb14"><span class="cl-17f95eee">sex</span></p></td><td class="cl-17fc05d7"><p class="cl-17fbeb14"><span class="cl-17f95eee"></span></p></td><td class="cl-17fc05d8"><p class="cl-17fbeb14"><span class="cl-17f95eee"></span></p></td><td class="cl-17fc05d7"><p class="cl-17fbeb14"><span class="cl-17f95eee"></span></p></td><td class="cl-17fc05d9"><p class="cl-17fbeb14"><span class="cl-17f95eee"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-17fc05a5"><p class="cl-17fbeb15"><span class="cl-17f95eee">Male</span></p></td><td class="cl-17fc05ae"><p class="cl-17fbeb14"><span class="cl-17f95eee">137 (60%)</span></p></td><td class="cl-17fc05af"><p class="cl-17fbeb14"><span class="cl-17f95eee">36 (57%)</span></p></td><td class="cl-17fc05ae"><p class="cl-17fbeb14"><span class="cl-17f95eee">71 (63%)</span></p></td><td class="cl-17fc05b0"><p class="cl-17fbeb14"><span class="cl-17f95eee">30 (59%)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-17fc05cc"><p class="cl-17fbeb15"><span class="cl-17f95eee">Female</span></p></td><td class="cl-17fc05cd"><p class="cl-17fbeb14"><span class="cl-17f95eee">90 (40%)</span></p></td><td class="cl-17fc05ce"><p class="cl-17fbeb14"><span class="cl-17f95eee">27 (43%)</span></p></td><td class="cl-17fc05cd"><p class="cl-17fbeb14"><span class="cl-17f95eee">42 (37%)</span></p></td><td class="cl-17fc05cf"><p class="cl-17fbeb14"><span class="cl-17f95eee">21 (41%)</span></p></td></tr></tbody><tfoot><tr style="overflow-wrap:break-word;"><td colspan="5" class="cl-17fc05e0"><p class="cl-17fbeb1e"><span class="cl-17f95ee4">1</span><span class="cl-17f95ed0">Median (Q1, Q3); n (%)</span></p></td></tr></tfoot></table></div>
+</div>
+</div>
+<section id="assumptions" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="assumptions"><span class="header-section-number">2.1</span> Assumptions</h2>
+<p>A KM analysis is valid under the following six conditions:</p>
+<ul>
+<li><strong>Binary Outcome</strong>. There are only two outcome states (e.g., dead vs alive).</li>
+<li><strong>Precise Survival Time</strong>. Survival time is recorded as a number, not an interval.</li>
+<li><strong>Minimal Left-censoring</strong>. Unknown starting points are minimal. Applies when starting point of experiment is not well-defined. E.g., for a disease, diagnosis date is preferable to symptom onset.</li>
+<li><strong>Uninformative Censoring</strong>. Censoring causes are independent of the event. Subjects do not drop out of the study because of something related to their group. E.g., a subject does not drop out of a therapy study because the therapy is making their condition worse.</li>
+<li><strong>No Cohort Effects</strong>. There are no secular trends. Staggered starting times may encompass the introduction of new therapies which affect survival.</li>
+<li><strong>Similar Censorship Patterns</strong>. The amount and pattern of censorship should be similar.</li>
+</ul>
+<p>The first four assumptions relate to study design and cannot be tested, but cohort effects can be tested by running KM tests for multiple time intervals, and censorship patterns can be tested by inspection. Cohort effects should not apply in a study lasting less than 3 years, so that assumption is not tested here.</p>
+<p>The participant censoring plot shows censored cases were equally spread over time and not too dissimilar for the <em>Asymptomatic</em> and <em>Ambulatory</em> groups, but the <em>Bedridden</em> group had a low number of censoring events (Fig @ref(fig:fig02-censoring)). Censored cases were negatively associated with symptom severity, <em>Asymptomatic</em>, 26 (41%), <em>Ambulatory</em>, 31 (27%), and <em>Bedridden</em>, 6 (12%) study groups.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>d_lung <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(status <span class="sc">==</span> <span class="dv">1</span> <span class="sc">|</span> ph.ecog <span class="sc">==</span> <span class="st">"In bed &gt;50%"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> time, <span class="at">y =</span> <span class="fu">fct_rev</span>(ph.ecog))) <span class="sc">+</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_light</span>() <span class="sc">+</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Participant Censoring"</span>, <span class="at">x =</span> <span class="st">"Time (days)"</span>, <span class="at">y =</span> <span class="cn">NULL</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<figcaption>Censored cases were equally spread over time</figcaption>
+<p><img src="02-km_files/figure-html/fig02-censoring-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="fitting-the-model" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="fitting-the-model"><span class="header-section-number">2.2</span> Fitting the Model</h2>
+<p>Calculate <span class="math inline">\(\hat{S}(t)\)</span> with <code>survival::survfit()</code>. <code>survfit()</code> operates on a <code>Surv</code> object, created by <code>survival::Surv()</code>. Explanatory variables can be defined as factors, but the event indicator, <code>status</code>, must be numeric and coded as 0|1 or 1|2.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> <code>survfit()</code> creates survival curves from a formula or from a previously fitted Cox model. If the confidence interval crosses zero, specify the log-log transformation parameter <code>conf.type = "log-log"</code> (this one doesn’t need it).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(km_fit <span class="ot">&lt;-</span> <span class="fu">survfit</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call: survfit(formula = Surv(time, status) ~ ph.ecog, data = d_lung)
+
+                       n events median 0.95LCL 0.95UCL
+ph.ecog=Asymptomatic  63     37    394     348     574
+ph.ecog=Ambulatory   113     82    306     268     429
+ph.ecog=Bedridden     51     45    183     153     288</code></pre>
+</div>
+</div>
+<p>37 of the 63 Asymptomatic subjects died, 82 of the 113 Ambulatory subjects died, and 45 of the 51 Bedridden subjects died. <code>gtsummary::tbl_survfit()</code> presents a similar summary in a formatted table. Table @ref(tab:tbl02-survfit) additionally presents the effects of sex and age.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(km_gt <span class="ot">&lt;-</span> gtsummary<span class="sc">::</span><span class="fu">tbl_survfit</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survfit</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> <span class="dv">1</span>, <span class="at">data =</span> d_lung),</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survfit</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survfit</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> sex, <span class="at">data =</span> d_lung),</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survfit</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> age_bin, <span class="at">data =</span> d_lung)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">probs =</span> <span class="fl">0.5</span>,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">label_header =</span> <span class="st">"**Median Survival**"</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># gtsummary::add_n() %&gt;%</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># gtsummary::add_nevent()) %&gt;%</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_flex_table</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  flextable<span class="sc">::</span><span class="fu">set_caption</span>(<span class="st">"Kaplan-Meier model fit."</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  flextable<span class="sc">::</span><span class="fu">theme_zebra</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="tabwid"><style>.cl-18b9503c{}.cl-18b2855e{font-family:'Arial';font-size:11pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-18b28568{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-18b51594{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:2pt;padding-top:2pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-18b5159e{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-18b515a8{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:15pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-18b527b4{width:1.43in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-18b527be{width:1.448in;background-color:rgba(207, 207, 207, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-18b527c8{width:1.43in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-18b527c9{width:1.448in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-18b527ca{width:1.43in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-18b527d2{width:1.448in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-18b527d3{width:1.43in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-18b527dc{width:1.448in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-18b527dd{width:1.43in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-18b527de{width:1.448in;background-color:transparent;vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-18b527df{width:1.43in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-18b527e6{width:1.448in;background-color:rgba(239, 239, 239, 1.00);vertical-align: top;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing="true" class="cl-18b9503c"><thead><tr style="overflow-wrap:break-word;"><th class="cl-18b527b4"><p class="cl-18b51594"><span class="cl-18b2855e">Characteristic</span></p></th><th class="cl-18b527be"><p class="cl-18b51594"><span class="cl-18b2855e">Median Survival</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-18b527c8"><p class="cl-18b5159e"><span class="cl-18b28568">Overall</span></p></td><td class="cl-18b527c9"><p class="cl-18b5159e"><span class="cl-18b28568">310 (285, 363)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-18b527ca"><p class="cl-18b5159e"><span class="cl-18b28568">ph.ecog</span></p></td><td class="cl-18b527d2"><p class="cl-18b5159e"><span class="cl-18b28568"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-18b527c8"><p class="cl-18b515a8"><span class="cl-18b28568">Asymptomatic</span></p></td><td class="cl-18b527c9"><p class="cl-18b5159e"><span class="cl-18b28568">394 (348, 574)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-18b527d3"><p class="cl-18b515a8"><span class="cl-18b28568">Ambulatory</span></p></td><td class="cl-18b527dc"><p class="cl-18b5159e"><span class="cl-18b28568">306 (268, 429)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-18b527c8"><p class="cl-18b515a8"><span class="cl-18b28568">Bedridden</span></p></td><td class="cl-18b527c9"><p class="cl-18b5159e"><span class="cl-18b28568">183 (153, 288)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-18b527dd"><p class="cl-18b5159e"><span class="cl-18b28568">sex</span></p></td><td class="cl-18b527de"><p class="cl-18b5159e"><span class="cl-18b28568"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-18b527c8"><p class="cl-18b515a8"><span class="cl-18b28568">Male</span></p></td><td class="cl-18b527c9"><p class="cl-18b5159e"><span class="cl-18b28568">270 (218, 320)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-18b527d3"><p class="cl-18b515a8"><span class="cl-18b28568">Female</span></p></td><td class="cl-18b527dc"><p class="cl-18b5159e"><span class="cl-18b28568">426 (348, 550)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-18b527df"><p class="cl-18b5159e"><span class="cl-18b28568">age_bin</span></p></td><td class="cl-18b527e6"><p class="cl-18b5159e"><span class="cl-18b28568"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-18b527d3"><p class="cl-18b515a8"><span class="cl-18b28568">(38,55]</span></p></td><td class="cl-18b527dc"><p class="cl-18b5159e"><span class="cl-18b28568">320 (226, 533)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-18b527c8"><p class="cl-18b515a8"><span class="cl-18b28568">(55,65]</span></p></td><td class="cl-18b527c9"><p class="cl-18b5159e"><span class="cl-18b28568">348 (285, 477)</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-18b527d3"><p class="cl-18b515a8"><span class="cl-18b28568">(65,83]</span></p></td><td class="cl-18b527dc"><p class="cl-18b5159e"><span class="cl-18b28568">301 (267, 361)</span></p></td></tr></tbody></table></div>
+</div>
+</div>
+<p><br></p>
+<p>Values are median with 95% CI. Asymptomatic participants had a median survival time of 394 (348, 574) days. This was longer than the Ambulatory group, 306 (268, 429) days, and Bedridden group, 183 (153, 288) days. There appears to be a survival advantage for lower levels of ECOG, but whether it is statistically significant requires a formal statistical test.</p>
+<p>Extract values for reporting with <code>gtsummary::inline_text()</code> (as was done above), or create a summary object. The <code>table</code> attribute of the summary object is a named numeric matrix. E.g., get Asymptomatic events with <code>km_smry$table["ph.ecog=Asymptomatic", "events"]</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>km_smry <span class="ot">&lt;-</span> <span class="fu">summary</span>(km_fit)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Example: Asymptomatic median survival time.</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>km_smry<span class="sc">$</span>table[<span class="st">"ph.ecog=Asymptomatic"</span>, <span class="st">"median"</span>]</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] 394</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You can also use <code>summary()</code> with the <code>time</code> parameter to estimate survival up until a point in time.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(km_fit, <span class="at">time =</span> <span class="dv">500</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call: survfit(formula = Surv(time, status) ~ ph.ecog, data = d_lung)
+
+                ph.ecog=Asymptomatic 
+        time       n.risk      n.event     survival      std.err lower 95% CI 
+    500.0000      13.0000      30.0000       0.3745       0.0751       0.2528 
+upper 95% CI 
+      0.5548 
+
+                ph.ecog=Ambulatory 
+        time       n.risk      n.event     survival      std.err lower 95% CI 
+    500.0000      21.0000      67.0000       0.3054       0.0505       0.2209 
+upper 95% CI 
+      0.4223 
+
+                ph.ecog=Bedridden 
+        time       n.risk      n.event     survival      std.err lower 95% CI 
+    500.0000       7.0000      40.0000       0.1635       0.0552       0.0844 
+upper 95% CI 
+      0.3169 </code></pre>
+</div>
+</div>
+<p><code>gtsummary::tbl_survfit()</code> does something similar.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>gtsummary<span class="sc">::</span><span class="fu">tbl_survfit</span>(km_fit, <span class="at">times =</span> <span class="dv">500</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="osenetjhwk" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#osenetjhwk table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#osenetjhwk thead, #osenetjhwk tbody, #osenetjhwk tfoot, #osenetjhwk tr, #osenetjhwk td, #osenetjhwk th {
+  border-style: none;
+}
+
+#osenetjhwk p {
+  margin: 0;
+  padding: 0;
+}
+
+#osenetjhwk .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#osenetjhwk .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#osenetjhwk .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#osenetjhwk .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#osenetjhwk .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#osenetjhwk .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#osenetjhwk .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#osenetjhwk .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#osenetjhwk .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#osenetjhwk .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#osenetjhwk .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#osenetjhwk .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#osenetjhwk .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#osenetjhwk .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#osenetjhwk .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#osenetjhwk .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#osenetjhwk .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#osenetjhwk .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#osenetjhwk .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#osenetjhwk .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#osenetjhwk .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#osenetjhwk .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#osenetjhwk .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#osenetjhwk .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#osenetjhwk .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#osenetjhwk .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#osenetjhwk .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#osenetjhwk .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#osenetjhwk .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#osenetjhwk .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#osenetjhwk .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#osenetjhwk .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#osenetjhwk .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#osenetjhwk .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#osenetjhwk .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#osenetjhwk .gt_left {
+  text-align: left;
+}
+
+#osenetjhwk .gt_center {
+  text-align: center;
+}
+
+#osenetjhwk .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#osenetjhwk .gt_font_normal {
+  font-weight: normal;
+}
+
+#osenetjhwk .gt_font_bold {
+  font-weight: bold;
+}
+
+#osenetjhwk .gt_font_italic {
+  font-style: italic;
+}
+
+#osenetjhwk .gt_super {
+  font-size: 65%;
+}
+
+#osenetjhwk .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#osenetjhwk .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#osenetjhwk .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#osenetjhwk .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#osenetjhwk .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#osenetjhwk .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#osenetjhwk .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#osenetjhwk .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#osenetjhwk div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header gt_col_headings">
+<th id="label" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col"><strong>Characteristic</strong></th>
+<th id="stat_1" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col"><strong>Time 500</strong></th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="label">ph.ecog</td>
+<td class="gt_row gt_center" headers="stat_1"><br>
+</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="label">&nbsp;&nbsp;&nbsp;&nbsp;Asymptomatic</td>
+<td class="gt_row gt_center" headers="stat_1">37% (25%, 55%)</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="label">&nbsp;&nbsp;&nbsp;&nbsp;Ambulatory</td>
+<td class="gt_row gt_center" headers="stat_1">31% (22%, 42%)</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="label">&nbsp;&nbsp;&nbsp;&nbsp;Bedridden</td>
+<td class="gt_row gt_center" headers="stat_1">16% (8.4%, 32%)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p><code>broom::tidy()</code> summarizes the data by each event time in the data. At time <em>t</em> = 11, 3 of the 138 males at risk died, so <span class="math inline">\(S(11) = 1 - \frac{3}{138} = .978\)</span>. At <em>t</em> = 12, 1 of the 135 that remained died, so <span class="math inline">\(S(12) = S(11) \cdot \frac{1}{135} = .971\)</span>, and so on. This is the support for the survival curves.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>broom<span class="sc">::</span><span class="fu">tidy</span>(km_fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 216 × 9
+    time n.risk n.event n.censor estimate std.error conf.high conf.low strata   
+   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;    
+ 1     5     63       1        0    0.984    0.0160     1        0.954 ph.ecog=…
+ 2    11     62       1        0    0.968    0.0228     1        0.926 ph.ecog=…
+ 3    15     61       1        0    0.952    0.0282     1        0.901 ph.ecog=…
+ 4    31     60       1        0    0.937    0.0328     0.999    0.878 ph.ecog=…
+ 5    53     59       1        0    0.921    0.0370     0.990    0.856 ph.ecog=…
+ 6    65     58       1        0    0.905    0.0409     0.980    0.835 ph.ecog=…
+ 7    81     57       1        0    0.889    0.0445     0.970    0.815 ph.ecog=…
+ 8   147     56       1        0    0.873    0.0480     0.959    0.795 ph.ecog=…
+ 9   166     55       1        0    0.857    0.0514     0.948    0.775 ph.ecog=…
+10   175     54       0        1    0.857    0.0514     0.948    0.775 ph.ecog=…
+# ℹ 206 more rows</code></pre>
+</div>
+</div>
+<p>A KM plot (Fig. @ref(fig:fig02-survcurv)) will give you a better feel for the data. Don’t use ggplot - <strong>survminer</strong> does a good job plotting KM models. Vertical drops indicate events and vertical ticks indicate censoring. Cumulative survival is negatively associated with the ECOG performance score. There is no substantial crossing of the survival curves that would affect the power of the statistical tests. The curves are similarly shaped. The log-rank test is ideal for similarly shaped distributions and distributions that do not cross. The Breslow, and Tarone-Ware tests are more sensitive alternatives.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>km_fit <span class="ot">&lt;-</span> <span class="fu">survfit</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>km_fit <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggsurvplot</span>(</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> d_lung,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">fun =</span> <span class="st">"pct"</span>,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># linetype = "strata", # Change line type by groups</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># pval = TRUE,</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># conf.int = TRUE,</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">risk.table =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">fontsize =</span> <span class="dv">3</span>, <span class="co"># used in risk table</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">surv.median.line =</span> <span class="st">"hv"</span>, <span class="co"># median horizontal and vertical ref lines</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">ggtheme =</span> <span class="fu">theme_light</span>(),</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">palette =</span> <span class="fu">c</span>(<span class="st">"goldenrod"</span>, <span class="st">"sienna"</span>, <span class="st">"tomato"</span>),</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Kaplan-Meier Survival Function Estimate"</span>,</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.title =</span> <span class="st">""</span>,</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.labs =</span> <span class="fu">levels</span>(d_lung<span class="sc">$</span>ph.ecog)</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<figcaption>Kaplan-Meier survival curve.</figcaption>
+<p><img src="02-km_files/figure-html/fig02-survcurv-1.png" class="img-fluid figure-img" width="624"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><code>ggsurvplot()</code> can also plot the cumulative risk function, <span class="math inline">\(F(t) = 1 - S(t)\)</span>, with parameter <code>fun = "event"</code> (Fig @ref(fig:fig02-cumrisk)), and the cumulative hazard function, <span class="math inline">\(H(t) = -\log S(t)\)</span>, with parameter <code>fun = "cumhaz"</code> (Fig @ref(fig:fig02-cumhaz)).</p>
+<!-- The colons (::::, :::) create a style html within document -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;">
+<div>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<figcaption>Kaplan-Meier cumulative risk curve.</figcaption>
+<p><img src="02-km_files/figure-html/fig02-cumrisk-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<figcaption>Kaplan-Meier cumulative hazard curve.</figcaption>
+<p><img src="02-km_files/figure-html/fig02-cumhaz-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="interpreting-results" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="interpreting-results"><span class="header-section-number">2.3</span> Interpreting Results</h2>
+<p>Determine whether there are significant differences in the fitted survival distributions using a <a href="01-concepts.html#logrank">log-rank test</a> (and/or Breslow and Tarone-Ware test). If there are differences, run a pairwise comparison post-hoc test to determine which curves differ.</p>
+<p>The log-rank test weights the difference at each time point equally. Compared to Breslow and Tarone-Ware, it places greater emphasis on differences at later rather than earlier time points. The Breslow test (aka generalized Wilcoxon or Gehan) weights the differences by the number at risk at each time point. The effect is to place greater weight on the differences at earlier time points. The Tarone-Ware test weights differences the same way as Breslow, but takes the square root of the number at risk.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(km_diff <span class="ot">&lt;-</span> <span class="fu">survdiff</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call:
+survdiff(formula = Surv(time, status) ~ ph.ecog, data = d_lung)
+
+                       N Observed Expected (O-E)^2/E (O-E)^2/V
+ph.ecog=Asymptomatic  63       37     54.2    5.4331    8.2119
+ph.ecog=Ambulatory   113       82     83.5    0.0279    0.0573
+ph.ecog=Bedridden     51       45     26.3   13.2582   15.9641
+
+ Chisq= 19  on 2 degrees of freedom, p= 8e-05 </code></pre>
+</div>
+</div>
+<p>The survival distributions for the three interventions were statistically significantly different, <span class="math inline">\(\chi^2\)</span>(2) = 19.0, <em>p</em> &lt; .001.</p>
+<p>Breslow and Tarone-Ware are in the <strong>coin</strong> package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>coin<span class="sc">::</span><span class="fu">logrank_test</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung, <span class="at">type =</span> <span class="st">"Tarone-Ware"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Asymptotic K-Sample Tarone-Ware Test
+
+data:  Surv(time, status) by
+     ph.ecog (Asymptomatic, Ambulatory, Bedridden)
+chi-squared = 19.009, df = 2, p-value = 7.451e-05</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>coin<span class="sc">::</span><span class="fu">logrank_test</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung, <span class="at">type =</span> <span class="st">"Gehan-Breslow"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Asymptotic K-Sample Gehan-Breslow Test
+
+data:  Surv(time, status) by
+     ph.ecog (Asymptomatic, Ambulatory, Bedridden)
+chi-squared = 19.431, df = 2, p-value = 6.034e-05</code></pre>
+</div>
+</div>
+<p>Three tests produced identical conclusions. The log rank test is an omnibus test. Create a pairwise comparisons table to see which groups differed.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>(km_pairwise <span class="ot">&lt;-</span> survminer<span class="sc">::</span><span class="fu">pairwise_survdiff</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Pairwise comparisons using Log-Rank test 
+
+data:  d_lung and ph.ecog 
+
+           Asymptomatic Ambulatory
+Ambulatory 0.0630       -         
+Bedridden  9e-05        0.0039    
+
+P value adjustment method: BH </code></pre>
+</div>
+</div>
+<p>Adjust the statistical significance to compensate for making multiple comparisons with a Bonferroni correction. There are three comparisons so divide .05 by 3, so the significance threshold is <em>p</em> &lt; .0167. There was a statistically significant difference in survival distributions for Asymptomatic vs Bedridden, <em>p</em> &lt; .001, and Ambulatory vs Bedridden, <em>p</em> = 0.004, but not for Asymptomatic vs Ambulatory, <em>p</em> = 0.063.</p>
+</section>
+<section id="reporting" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="reporting"><span class="header-section-number">2.4</span> Reporting</h2>
+<p>The guidelines for reporting the Kaplan-Meier test are from Laerd’s Kaplan-Meier using SPSS Statistics <span class="citation" data-cites="Laerd2015">(<a href="08-references.html#ref-Laerd2015" role="doc-biblioref">Laerd 2015</a>)</span>. Report the results like this.</p>
+<blockquote class="blockquote">
+<p>227 Men and women diagnosed with advanced lung cancer aged 39 to 82 were monitored up to three years until time of death. Participants were classified into three groups according to their ECOG performance score: <em>asymptomatic</em> (n = 63), <em>symptomatic but completely ambulatory</em> (n = 113), and <em>bedridden at least part of the day</em> (n = 51). A Kaplan-Meier survival analysis (Kaplan &amp; Meier, 1958) was conducted to compare survival times among the three ECOG performance scores. Censored cases were negatively associated with symptom severity, <em>asymptomatic</em>, 26 (41%), <em>symptomatic but completely ambulatory</em>, 31 (27%), and <em>bedridden</em>, 6 (12%) study groups. Participants that were asymptomatic had a median survival time of 394 (348, 574) days. This was longer than the ambulatory group, 306 (268, 429) days, and bedridden group, 183 (153, 288) days. A log rank test was run to determine if there were differences in the survival distribution for the different types of intervention. The survival distributions for the three interventions were statistically significantly different, <span class="math inline">\(\chi^2\)</span>(2) = 19.0, <em>p</em> &lt; .001. Pairwise log rank comparisons were conducted to determine which intervention groups had different survival distributions. A Bonferroni correction was made with statistical significance accepted at the <em>p</em> &lt; .017 level. There was a statistically significant difference in survival distributions for the aymptomatic vs bedridden, <em>p</em> &lt; .001, and ambulatory vs bedridden, <em>p</em> = 0.004, groups. However, the survival distributions for the asymptomatic vs ambulatory group were not statistically significant, <em>p</em> = 0.063</p>
+</blockquote>
+
+
+<!-- -->
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Clark2003a" class="csl-entry" role="listitem">
+Clark, Bradburn, T. G. 2003. <span>“Survival Analysis Part i: Basic Concepts and First Analyses.”</span> <em>British Journal of Cancer</em> 89 (2). <a href="https://doi.org/10.1038/sj.bjc.6601118">https://doi.org/10.1038/sj.bjc.6601118</a>.
+</div>
+<div id="ref-Laerd2015" class="csl-entry" role="listitem">
+Laerd. 2015. <em>Statistical Tutorials and Software Guides</em>. <a href="https://statistics.laerd.com/">https://statistics.laerd.com/</a>.
+</div>
+</div>
+</section>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn1"><p>Use <code>gtsummary::inline_text()</code> to summarize (e.g., <code>gtsummary::inline_text(t1, variable = status, level = "censored", column = "Asymptomatic")</code>.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>See neat discussion in Note section of <code>Surv()</code> help file.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./01-concepts.html" class="pagination-link" aria-label="Concepts">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Concepts</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./03-parametric.html" class="pagination-link" aria-label="Parametric">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Parametric</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb23" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Kaplan-Meier {#sec-km}</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="in">```{r message=FALSE, warning=FALSE}</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="in">library(tidyverse)</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="in">library(survival)</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="in">library(survminer)</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="in">library(gtsummary)</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="in">library(scales)</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>Survival data are generally described and modeled in terms of the survivor function and the hazard function. The survivor function $S(t)$ is the probability of surviving to some time beyond _t_ and is usually estimated by the Kaplan-Meier (KM) method. The log-rank test is then used to test for differences between survival curves for treatment groups. The hazard function $h(t)$ is the instantaneous event rate at *t* given survival up to *t*. It is primarily as a diagnostic tool. KM analyses are limited, however, because they cannot adjust for subject-related confounding variables such as age or gender. To adjust for covariates, a multivariate survival analysis such as the parametric and semi-parametric models is necessary <span class="co">[</span><span class="ot">@Clark2003a</span><span class="co">]</span>.</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>The KM estimator for the survival function is the product over failure times of the conditional probabilities of surviving to the next failure time.</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>$$\hat{S}(t) = \prod_{i: t_i &lt; t}{\frac{n_i - d_i}{n_i}}$$</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>where $n_i$ is the number of subjects at risk at time $i$ and $d_i$ is the number incurring the event. I.e., $\hat{S}(t)$ is the sum-product of the survival proportions at each time interval, the cumulative survival probability. The KM curve falls only when an event occurs, not when a subject is censored. Confidence limits are calculated using the "delta" method to obtain the variance of $\log \hat{S}(t)$.</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>The KM method is demonstrated here with a case study using the <span class="in">`survival::lung`</span> data set. </span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>d_lung <span class="ot">&lt;-</span> survival<span class="sc">::</span>lung <span class="sc">%&gt;%</span></span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ph.ecog)) <span class="sc">%&gt;%</span></span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">ph.ecog =</span> <span class="fu">factor</span>(</span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>      ph.ecog,</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>),</span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Asymptomatic"</span>, <span class="st">"Ambulatory"</span>, <span class="st">"In bed &lt;50%"</span>, <span class="st">"In bed &gt;50%"</span>, <span class="st">"Bedridden"</span>)),</span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">ph.ecog =</span> <span class="fu">fct_drop</span>(ph.ecog),</span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">ph.ecog =</span> <span class="fu">fct_lump_n</span>(ph.ecog, <span class="at">n =</span> <span class="dv">2</span>, <span class="at">other_level =</span> <span class="st">"Bedridden"</span>),</span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">sex =</span> <span class="fu">factor</span>(sex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Male"</span>, <span class="st">"Female"</span>)),</span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">age_bin =</span> <span class="fu">cut</span>(age, <span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">38</span>, <span class="dv">55</span>, <span class="dv">65</span>, <span class="dv">83</span>)),</span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">patient_id =</span> <span class="fu">row_number</span>()</span>
+<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-38"><a href="#cb23-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-39"><a href="#cb23-39" aria-hidden="true" tabindex="-1"></a>The study investigated differences in all-cause mortality between men and women diagnosed with advanced lung cancer. <span class="in">`r nrow(d_lung) %&gt;% comma(1)`</span> participants aged <span class="in">`r min(d_lung$age)`</span> to <span class="in">`r max(d_lung$age)`</span> were monitored up to three years until time of death. The participants were segmented into three groups according to their ECOG performance score: *Asymptomatic*, symptomatic but completely *Ambulatory*, and *Bedridden* at least part of the day. Participants' age and gender were captured as possible controlling covariates, but will not be used here since a KM analysis is only able to compare the distributions among levels of a single factor. Table \@ref(tab:tbl01-smrystats) presents the summary statistics of the data set.</span>
+<span id="cb23-40"><a href="#cb23-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-41"><a href="#cb23-41" aria-hidden="true" tabindex="-1"></a><span class="in">```{r tbl01-smrystats}</span></span>
+<span id="cb23-42"><a href="#cb23-42" aria-hidden="true" tabindex="-1"></a><span class="in">(t1 &lt;- d_lung %&gt;%</span></span>
+<span id="cb23-43"><a href="#cb23-43" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(status = factor(status, levels = c(1, 2), labels = c("censored", "died"))) %&gt;%</span></span>
+<span id="cb23-44"><a href="#cb23-44" aria-hidden="true" tabindex="-1"></a><span class="in">  tbl_summary(by = "ph.ecog", include = c(time, status, ph.ecog, age, sex)) %&gt;%</span></span>
+<span id="cb23-45"><a href="#cb23-45" aria-hidden="true" tabindex="-1"></a><span class="in">  add_overall()) %&gt;%</span></span>
+<span id="cb23-46"><a href="#cb23-46" aria-hidden="true" tabindex="-1"></a><span class="in">  as_flex_table() %&gt;%</span></span>
+<span id="cb23-47"><a href="#cb23-47" aria-hidden="true" tabindex="-1"></a><span class="in">  flextable::set_caption("Summary statistics.") %&gt;%</span></span>
+<span id="cb23-48"><a href="#cb23-48" aria-hidden="true" tabindex="-1"></a><span class="in">  flextable::theme_zebra()</span></span>
+<span id="cb23-49"><a href="#cb23-49" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-50"><a href="#cb23-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-51"><a href="#cb23-51" aria-hidden="true" tabindex="-1"></a><span class="fu">## Assumptions</span></span>
+<span id="cb23-52"><a href="#cb23-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-53"><a href="#cb23-53" aria-hidden="true" tabindex="-1"></a>A KM analysis is valid under the following six conditions:</span>
+<span id="cb23-54"><a href="#cb23-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-55"><a href="#cb23-55" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Binary Outcome**. There are only two outcome states (e.g., dead vs alive).</span>
+<span id="cb23-56"><a href="#cb23-56" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Precise Survival Time**. Survival time is recorded as a number, not an interval.</span>
+<span id="cb23-57"><a href="#cb23-57" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Minimal Left-censoring**. Unknown starting points are minimal. Applies when starting point of experiment is not well-defined. E.g., for a disease, diagnosis date is preferable to symptom onset.</span>
+<span id="cb23-58"><a href="#cb23-58" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Uninformative Censoring**. Censoring causes are independent of the event. Subjects do not drop out of the study because of something related to their group. E.g., a subject does not drop out of a therapy study because the therapy is making their condition worse. </span>
+<span id="cb23-59"><a href="#cb23-59" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**No Cohort Effects**. There are no secular trends. Staggered starting times may encompass the introduction of new therapies which affect survival.</span>
+<span id="cb23-60"><a href="#cb23-60" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Similar Censorship Patterns**. The amount and pattern of censorship should be similar.</span>
+<span id="cb23-61"><a href="#cb23-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-62"><a href="#cb23-62" aria-hidden="true" tabindex="-1"></a>The first four assumptions relate to study design and cannot be tested, but cohort effects can be tested by running KM tests for multiple time intervals, and censorship patterns can be tested by inspection. Cohort effects should not apply in a study lasting less than 3 years, so that assumption is not tested here.</span>
+<span id="cb23-63"><a href="#cb23-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-64"><a href="#cb23-64" aria-hidden="true" tabindex="-1"></a>The participant censoring plot shows censored cases were equally spread over time and not too dissimilar for the *Asymptomatic* and *Ambulatory* groups, but the *Bedridden* group had a low number of censoring events (Fig \@ref(fig:fig02-censoring)). Censored cases were negatively associated with symptom severity, *Asymptomatic*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Asymptomatic")`, *Ambulatory*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Ambulatory")`, and *Bedridden*, <span class="in">`r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Bedridden")`</span> study groups.^<span class="co">[</span><span class="ot">Use `gtsummary::inline_text()` to summarize (e.g., `gtsummary::inline_text(t1, variable = status, level = "censored", column = "Asymptomatic")`.</span><span class="co">]</span></span>
+<span id="cb23-65"><a href="#cb23-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-66"><a href="#cb23-66" aria-hidden="true" tabindex="-1"></a><span class="in">```{r fig02-censoring, fig.cap="Censored cases were equally spread over time"}</span></span>
+<span id="cb23-67"><a href="#cb23-67" aria-hidden="true" tabindex="-1"></a><span class="in">d_lung %&gt;%</span></span>
+<span id="cb23-68"><a href="#cb23-68" aria-hidden="true" tabindex="-1"></a><span class="in">  filter(status == 1 | ph.ecog == "In bed &gt;50%") %&gt;%</span></span>
+<span id="cb23-69"><a href="#cb23-69" aria-hidden="true" tabindex="-1"></a><span class="in">  ggplot(aes(x = time, y = fct_rev(ph.ecog))) +</span></span>
+<span id="cb23-70"><a href="#cb23-70" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_point() +</span></span>
+<span id="cb23-71"><a href="#cb23-71" aria-hidden="true" tabindex="-1"></a><span class="in">  theme_light() +</span></span>
+<span id="cb23-72"><a href="#cb23-72" aria-hidden="true" tabindex="-1"></a><span class="in">  labs(title = "Participant Censoring", x = "Time (days)", y = NULL)</span></span>
+<span id="cb23-73"><a href="#cb23-73" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-74"><a href="#cb23-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-75"><a href="#cb23-75" aria-hidden="true" tabindex="-1"></a><span class="fu">## Fitting the Model</span></span>
+<span id="cb23-76"><a href="#cb23-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-77"><a href="#cb23-77" aria-hidden="true" tabindex="-1"></a>Calculate $\hat{S}(t)$ with <span class="in">`survival::survfit()`</span>. <span class="in">`survfit()`</span> operates on a <span class="in">`Surv`</span> object, created by <span class="in">`survival::Surv()`</span>. Explanatory variables can be defined as factors, but the event indicator, <span class="in">`status`</span>, must be numeric and coded as 0|1 or 1|2.^<span class="co">[</span><span class="ot">See neat discussion in Note section of `Surv()` help file.</span><span class="co">]</span> <span class="in">`survfit()`</span> creates survival curves from a formula or from a previously fitted Cox model. If the confidence interval crosses zero, specify the log-log transformation parameter <span class="in">`conf.type = "log-log"`</span> (this one doesn't need it).</span>
+<span id="cb23-78"><a href="#cb23-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-81"><a href="#cb23-81" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb23-82"><a href="#cb23-82" aria-hidden="true" tabindex="-1"></a>(km_fit <span class="ot">&lt;-</span> <span class="fu">survfit</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung))</span>
+<span id="cb23-83"><a href="#cb23-83" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-84"><a href="#cb23-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-85"><a href="#cb23-85" aria-hidden="true" tabindex="-1"></a><span class="in">```{r include=FALSE}</span></span>
+<span id="cb23-86"><a href="#cb23-86" aria-hidden="true" tabindex="-1"></a><span class="in">km_smry &lt;- summary(km_fit)</span></span>
+<span id="cb23-87"><a href="#cb23-87" aria-hidden="true" tabindex="-1"></a><span class="in">km_smry$table</span></span>
+<span id="cb23-88"><a href="#cb23-88" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-89"><a href="#cb23-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-90"><a href="#cb23-90" aria-hidden="true" tabindex="-1"></a><span class="in">`r km_smry$table["ph.ecog=Asymptomatic", "events"]`</span> of the <span class="in">`r km_smry$table["ph.ecog=Asymptomatic", "records"]`</span> Asymptomatic subjects died, <span class="in">`r km_smry$table["ph.ecog=Ambulatory", "events"]`</span> of the <span class="in">`r km_smry$table["ph.ecog=Ambulatory", "records"]`</span> Ambulatory subjects died, and <span class="in">`r km_smry$table["ph.ecog=Bedridden", "events"]`</span> of the <span class="in">`r km_smry$table["ph.ecog=Bedridden", "records"]`</span> Bedridden subjects died. <span class="in">`gtsummary::tbl_survfit()`</span> presents a similar summary in a formatted table. Table \@ref(tab:tbl02-survfit) additionally presents the effects of sex and age.</span>
+<span id="cb23-91"><a href="#cb23-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-92"><a href="#cb23-92" aria-hidden="true" tabindex="-1"></a><span class="in">```{r tbl02-survfit}</span></span>
+<span id="cb23-93"><a href="#cb23-93" aria-hidden="true" tabindex="-1"></a><span class="in">(km_gt &lt;- gtsummary::tbl_survfit(</span></span>
+<span id="cb23-94"><a href="#cb23-94" aria-hidden="true" tabindex="-1"></a><span class="in">  list(</span></span>
+<span id="cb23-95"><a href="#cb23-95" aria-hidden="true" tabindex="-1"></a><span class="in">    survfit(Surv(time, status) ~ 1, data = d_lung),</span></span>
+<span id="cb23-96"><a href="#cb23-96" aria-hidden="true" tabindex="-1"></a><span class="in">    survfit(Surv(time, status) ~ ph.ecog, data = d_lung),</span></span>
+<span id="cb23-97"><a href="#cb23-97" aria-hidden="true" tabindex="-1"></a><span class="in">    survfit(Surv(time, status) ~ sex, data = d_lung),</span></span>
+<span id="cb23-98"><a href="#cb23-98" aria-hidden="true" tabindex="-1"></a><span class="in">    survfit(Surv(time, status) ~ age_bin, data = d_lung)</span></span>
+<span id="cb23-99"><a href="#cb23-99" aria-hidden="true" tabindex="-1"></a><span class="in">  ),</span></span>
+<span id="cb23-100"><a href="#cb23-100" aria-hidden="true" tabindex="-1"></a><span class="in">  probs = 0.5,</span></span>
+<span id="cb23-101"><a href="#cb23-101" aria-hidden="true" tabindex="-1"></a><span class="in">  label_header = "**Median Survival**"</span></span>
+<span id="cb23-102"><a href="#cb23-102" aria-hidden="true" tabindex="-1"></a><span class="in">)) %&gt;%</span></span>
+<span id="cb23-103"><a href="#cb23-103" aria-hidden="true" tabindex="-1"></a><span class="in">  # gtsummary::add_n() %&gt;%</span></span>
+<span id="cb23-104"><a href="#cb23-104" aria-hidden="true" tabindex="-1"></a><span class="in">  # gtsummary::add_nevent()) %&gt;%</span></span>
+<span id="cb23-105"><a href="#cb23-105" aria-hidden="true" tabindex="-1"></a><span class="in">  as_flex_table() %&gt;%</span></span>
+<span id="cb23-106"><a href="#cb23-106" aria-hidden="true" tabindex="-1"></a><span class="in">  flextable::set_caption("Kaplan-Meier model fit.") %&gt;%</span></span>
+<span id="cb23-107"><a href="#cb23-107" aria-hidden="true" tabindex="-1"></a><span class="in">  flextable::theme_zebra()</span></span>
+<span id="cb23-108"><a href="#cb23-108" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-109"><a href="#cb23-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-110"><a href="#cb23-110" aria-hidden="true" tabindex="-1"></a>&lt;br&gt;</span>
+<span id="cb23-111"><a href="#cb23-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-112"><a href="#cb23-112" aria-hidden="true" tabindex="-1"></a>Values are median with 95% CI. Asymptomatic participants had a median survival time of <span class="in">`r inline_text(km_gt, "ph.ecog", level = "Asymptomatic", column = stat_1)`</span> days. This was longer than the Ambulatory group, <span class="in">`r inline_text(km_gt, "ph.ecog", level = "Ambulatory", column = stat_1)`</span> days, and Bedridden group, <span class="in">`r inline_text(km_gt, "ph.ecog", level = "Bedridden", column = stat_1)`</span> days. There appears to be a survival advantage for lower levels of ECOG, but whether it is statistically significant requires a formal statistical test.</span>
+<span id="cb23-113"><a href="#cb23-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-114"><a href="#cb23-114" aria-hidden="true" tabindex="-1"></a>Extract values for reporting with <span class="in">`gtsummary::inline_text()`</span> (as was done above), or create a summary object. The <span class="in">`table`</span> attribute of the summary object is a named numeric matrix. E.g., get Asymptomatic events with <span class="in">`km_smry$table["ph.ecog=Asymptomatic", "events"]`</span>.</span>
+<span id="cb23-115"><a href="#cb23-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-116"><a href="#cb23-116" aria-hidden="true" tabindex="-1"></a><span class="in">```{r collapse=TRUE}</span></span>
+<span id="cb23-117"><a href="#cb23-117" aria-hidden="true" tabindex="-1"></a><span class="in">km_smry &lt;- summary(km_fit)</span></span>
+<span id="cb23-118"><a href="#cb23-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-119"><a href="#cb23-119" aria-hidden="true" tabindex="-1"></a><span class="in"># Example: Asymptomatic median survival time.</span></span>
+<span id="cb23-120"><a href="#cb23-120" aria-hidden="true" tabindex="-1"></a><span class="in">km_smry$table["ph.ecog=Asymptomatic", "median"]</span></span>
+<span id="cb23-121"><a href="#cb23-121" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-122"><a href="#cb23-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-123"><a href="#cb23-123" aria-hidden="true" tabindex="-1"></a>You can also use <span class="in">`summary()`</span> with the <span class="in">`time`</span> parameter to estimate survival up until a point in time.</span>
+<span id="cb23-124"><a href="#cb23-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-127"><a href="#cb23-127" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb23-128"><a href="#cb23-128" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(km_fit, <span class="at">time =</span> <span class="dv">500</span>)</span>
+<span id="cb23-129"><a href="#cb23-129" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-130"><a href="#cb23-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-131"><a href="#cb23-131" aria-hidden="true" tabindex="-1"></a><span class="in">`gtsummary::tbl_survfit()`</span> does something similar.</span>
+<span id="cb23-132"><a href="#cb23-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-135"><a href="#cb23-135" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb23-136"><a href="#cb23-136" aria-hidden="true" tabindex="-1"></a>gtsummary<span class="sc">::</span><span class="fu">tbl_survfit</span>(km_fit, <span class="at">times =</span> <span class="dv">500</span>)</span>
+<span id="cb23-137"><a href="#cb23-137" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-138"><a href="#cb23-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-139"><a href="#cb23-139" aria-hidden="true" tabindex="-1"></a><span class="in">`broom::tidy()`</span> summarizes the data by each event time in the data. At time *t* = 11, 3 of the 138 males at risk died, so $S(11) = 1 - \frac{3}{138} = .978$. At *t* = 12, 1 of the 135 that remained died, so $S(12) = S(11) \cdot \frac{1}{135} = .971$, and so on. This is the support for the survival curves.</span>
+<span id="cb23-140"><a href="#cb23-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-143"><a href="#cb23-143" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb23-144"><a href="#cb23-144" aria-hidden="true" tabindex="-1"></a>broom<span class="sc">::</span><span class="fu">tidy</span>(km_fit)</span>
+<span id="cb23-145"><a href="#cb23-145" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-146"><a href="#cb23-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-147"><a href="#cb23-147" aria-hidden="true" tabindex="-1"></a>A KM plot (Fig. \@ref(fig:fig02-survcurv)) will give you a better feel for the data. Don't use ggplot - **survminer** does a good job plotting KM models. Vertical drops indicate events and vertical ticks indicate censoring. Cumulative survival is negatively associated with the ECOG performance score. There is no substantial crossing of the survival curves that would affect the power of the statistical tests. The curves are similarly shaped. The log-rank test is ideal for similarly shaped distributions and distributions that do not cross. The Breslow, and Tarone-Ware tests are more sensitive alternatives.</span>
+<span id="cb23-148"><a href="#cb23-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-149"><a href="#cb23-149" aria-hidden="true" tabindex="-1"></a><span class="in">```{r fig02-survcurv, fig.height=7, fig.width=6.5, fig.cap="Kaplan-Meier survival curve."}</span></span>
+<span id="cb23-150"><a href="#cb23-150" aria-hidden="true" tabindex="-1"></a><span class="in">km_fit &lt;- survfit(Surv(time, status) ~ ph.ecog, data = d_lung)</span></span>
+<span id="cb23-151"><a href="#cb23-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-152"><a href="#cb23-152" aria-hidden="true" tabindex="-1"></a><span class="in">km_fit %&gt;%</span></span>
+<span id="cb23-153"><a href="#cb23-153" aria-hidden="true" tabindex="-1"></a><span class="in">  ggsurvplot(</span></span>
+<span id="cb23-154"><a href="#cb23-154" aria-hidden="true" tabindex="-1"></a><span class="in">    data = d_lung,</span></span>
+<span id="cb23-155"><a href="#cb23-155" aria-hidden="true" tabindex="-1"></a><span class="in">    fun = "pct",</span></span>
+<span id="cb23-156"><a href="#cb23-156" aria-hidden="true" tabindex="-1"></a><span class="in">    # linetype = "strata", # Change line type by groups</span></span>
+<span id="cb23-157"><a href="#cb23-157" aria-hidden="true" tabindex="-1"></a><span class="in">    # pval = TRUE,</span></span>
+<span id="cb23-158"><a href="#cb23-158" aria-hidden="true" tabindex="-1"></a><span class="in">    # conf.int = TRUE,</span></span>
+<span id="cb23-159"><a href="#cb23-159" aria-hidden="true" tabindex="-1"></a><span class="in">    risk.table = TRUE,</span></span>
+<span id="cb23-160"><a href="#cb23-160" aria-hidden="true" tabindex="-1"></a><span class="in">    fontsize = 3, # used in risk table</span></span>
+<span id="cb23-161"><a href="#cb23-161" aria-hidden="true" tabindex="-1"></a><span class="in">    surv.median.line = "hv", # median horizontal and vertical ref lines</span></span>
+<span id="cb23-162"><a href="#cb23-162" aria-hidden="true" tabindex="-1"></a><span class="in">    ggtheme = theme_light(),</span></span>
+<span id="cb23-163"><a href="#cb23-163" aria-hidden="true" tabindex="-1"></a><span class="in">    palette = c("goldenrod", "sienna", "tomato"),</span></span>
+<span id="cb23-164"><a href="#cb23-164" aria-hidden="true" tabindex="-1"></a><span class="in">    title = "Kaplan-Meier Survival Function Estimate",</span></span>
+<span id="cb23-165"><a href="#cb23-165" aria-hidden="true" tabindex="-1"></a><span class="in">    legend.title = "",</span></span>
+<span id="cb23-166"><a href="#cb23-166" aria-hidden="true" tabindex="-1"></a><span class="in">    legend.labs = levels(d_lung$ph.ecog)</span></span>
+<span id="cb23-167"><a href="#cb23-167" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
+<span id="cb23-168"><a href="#cb23-168" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-169"><a href="#cb23-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-170"><a href="#cb23-170" aria-hidden="true" tabindex="-1"></a><span class="in">`ggsurvplot()`</span> can also plot the cumulative risk function, $F(t) = 1 - S(t)$, with parameter <span class="in">`fun = "event"`</span> (Fig \@ref(fig:fig02-cumrisk)), and the cumulative hazard function, $H(t) = -\log S(t)$, with parameter <span class="in">`fun = "cumhaz"`</span> (Fig \@ref(fig:fig02-cumhaz)).</span>
+<span id="cb23-171"><a href="#cb23-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-172"><a href="#cb23-172" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- The colons (::::, :::) create a style html within document --&gt;</span></span>
+<span id="cb23-173"><a href="#cb23-173" aria-hidden="true" tabindex="-1"></a>:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"}</span>
+<span id="cb23-174"><a href="#cb23-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-175"><a href="#cb23-175" aria-hidden="true" tabindex="-1"></a>::: {}</span>
+<span id="cb23-176"><a href="#cb23-176" aria-hidden="true" tabindex="-1"></a><span class="in">```{r fig02-cumrisk, echo=FALSE, fig.cap="Kaplan-Meier cumulative risk curve."}</span></span>
+<span id="cb23-177"><a href="#cb23-177" aria-hidden="true" tabindex="-1"></a><span class="in">ggsurvplot(</span></span>
+<span id="cb23-178"><a href="#cb23-178" aria-hidden="true" tabindex="-1"></a><span class="in">  km_fit,</span></span>
+<span id="cb23-179"><a href="#cb23-179" aria-hidden="true" tabindex="-1"></a><span class="in">  data = d_lung,</span></span>
+<span id="cb23-180"><a href="#cb23-180" aria-hidden="true" tabindex="-1"></a><span class="in">  fun = "event",</span></span>
+<span id="cb23-181"><a href="#cb23-181" aria-hidden="true" tabindex="-1"></a><span class="in">  linetype = "strata", # Change line type by groups</span></span>
+<span id="cb23-182"><a href="#cb23-182" aria-hidden="true" tabindex="-1"></a><span class="in">  pval = FALSE,</span></span>
+<span id="cb23-183"><a href="#cb23-183" aria-hidden="true" tabindex="-1"></a><span class="in">  conf.int = FALSE,</span></span>
+<span id="cb23-184"><a href="#cb23-184" aria-hidden="true" tabindex="-1"></a><span class="in">  ggtheme = theme_bw(),</span></span>
+<span id="cb23-185"><a href="#cb23-185" aria-hidden="true" tabindex="-1"></a><span class="in">  palette = c("goldenrod", "sienna", "tomato"),</span></span>
+<span id="cb23-186"><a href="#cb23-186" aria-hidden="true" tabindex="-1"></a><span class="in">  title = "Cumulative Risk"</span></span>
+<span id="cb23-187"><a href="#cb23-187" aria-hidden="true" tabindex="-1"></a><span class="in">)</span></span>
+<span id="cb23-188"><a href="#cb23-188" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-189"><a href="#cb23-189" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb23-190"><a href="#cb23-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-191"><a href="#cb23-191" aria-hidden="true" tabindex="-1"></a>::: {}</span>
+<span id="cb23-192"><a href="#cb23-192" aria-hidden="true" tabindex="-1"></a><span class="in">```{r fig02-cumhaz, echo=FALSE, fig.cap="Kaplan-Meier cumulative hazard curve."}</span></span>
+<span id="cb23-193"><a href="#cb23-193" aria-hidden="true" tabindex="-1"></a><span class="in">ggsurvplot(</span></span>
+<span id="cb23-194"><a href="#cb23-194" aria-hidden="true" tabindex="-1"></a><span class="in">  km_fit,</span></span>
+<span id="cb23-195"><a href="#cb23-195" aria-hidden="true" tabindex="-1"></a><span class="in">  data = d_lung,</span></span>
+<span id="cb23-196"><a href="#cb23-196" aria-hidden="true" tabindex="-1"></a><span class="in">  fun = "cumhaz",</span></span>
+<span id="cb23-197"><a href="#cb23-197" aria-hidden="true" tabindex="-1"></a><span class="in">  linetype = "strata", # Change line type by groups</span></span>
+<span id="cb23-198"><a href="#cb23-198" aria-hidden="true" tabindex="-1"></a><span class="in">  pval = FALSE,</span></span>
+<span id="cb23-199"><a href="#cb23-199" aria-hidden="true" tabindex="-1"></a><span class="in">  conf.int = FALSE,</span></span>
+<span id="cb23-200"><a href="#cb23-200" aria-hidden="true" tabindex="-1"></a><span class="in">  ggtheme = theme_bw(),</span></span>
+<span id="cb23-201"><a href="#cb23-201" aria-hidden="true" tabindex="-1"></a><span class="in">  palette = c("goldenrod", "sienna", "tomato"),</span></span>
+<span id="cb23-202"><a href="#cb23-202" aria-hidden="true" tabindex="-1"></a><span class="in">  title = "Cumulative Hazard"</span></span>
+<span id="cb23-203"><a href="#cb23-203" aria-hidden="true" tabindex="-1"></a><span class="in">)</span></span>
+<span id="cb23-204"><a href="#cb23-204" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-205"><a href="#cb23-205" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb23-206"><a href="#cb23-206" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-207"><a href="#cb23-207" aria-hidden="true" tabindex="-1"></a>::::</span>
+<span id="cb23-208"><a href="#cb23-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-209"><a href="#cb23-209" aria-hidden="true" tabindex="-1"></a><span class="fu">## Interpreting Results</span></span>
+<span id="cb23-210"><a href="#cb23-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-211"><a href="#cb23-211" aria-hidden="true" tabindex="-1"></a>Determine whether there are significant differences in the fitted survival distributions using a <span class="co">[</span><span class="ot">log-rank test</span><span class="co">](#logrank)</span> (and/or Breslow and Tarone-Ware test). If there are differences, run a pairwise comparison post-hoc test to determine which curves differ.</span>
+<span id="cb23-212"><a href="#cb23-212" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-213"><a href="#cb23-213" aria-hidden="true" tabindex="-1"></a>The log-rank test weights the difference at each time point equally. Compared to Breslow and Tarone-Ware, it places greater emphasis on differences at later rather than earlier time points. The Breslow test (aka generalized Wilcoxon or Gehan) weights the differences by the number at risk at each time point. The effect is to place greater weight on the differences at earlier time points. The Tarone-Ware test weights differences the same way as Breslow, but takes the square root of the number at risk. </span>
+<span id="cb23-214"><a href="#cb23-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-217"><a href="#cb23-217" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb23-218"><a href="#cb23-218" aria-hidden="true" tabindex="-1"></a>(km_diff <span class="ot">&lt;-</span> <span class="fu">survdiff</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung))</span>
+<span id="cb23-219"><a href="#cb23-219" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-220"><a href="#cb23-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-221"><a href="#cb23-221" aria-hidden="true" tabindex="-1"></a>The survival distributions for the three interventions were statistically significantly different, $\chi^2$(2) = <span class="in">`r km_diff$chisq %&gt;% number(.1)`</span>, *p* &lt; .001.</span>
+<span id="cb23-222"><a href="#cb23-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-223"><a href="#cb23-223" aria-hidden="true" tabindex="-1"></a>Breslow and Tarone-Ware are in the **coin** package.</span>
+<span id="cb23-224"><a href="#cb23-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-227"><a href="#cb23-227" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb23-228"><a href="#cb23-228" aria-hidden="true" tabindex="-1"></a>coin<span class="sc">::</span><span class="fu">logrank_test</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung, <span class="at">type =</span> <span class="st">"Tarone-Ware"</span>)</span>
+<span id="cb23-229"><a href="#cb23-229" aria-hidden="true" tabindex="-1"></a>coin<span class="sc">::</span><span class="fu">logrank_test</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung, <span class="at">type =</span> <span class="st">"Gehan-Breslow"</span>)</span>
+<span id="cb23-230"><a href="#cb23-230" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-231"><a href="#cb23-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-232"><a href="#cb23-232" aria-hidden="true" tabindex="-1"></a>Three tests produced identical conclusions. The log rank test is an omnibus test. Create a pairwise comparisons table to see which groups differed.</span>
+<span id="cb23-233"><a href="#cb23-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-236"><a href="#cb23-236" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb23-237"><a href="#cb23-237" aria-hidden="true" tabindex="-1"></a>(km_pairwise <span class="ot">&lt;-</span> survminer<span class="sc">::</span><span class="fu">pairwise_survdiff</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> ph.ecog, <span class="at">data =</span> d_lung))</span>
+<span id="cb23-238"><a href="#cb23-238" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb23-239"><a href="#cb23-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-240"><a href="#cb23-240" aria-hidden="true" tabindex="-1"></a>Adjust the statistical significance to compensate for making multiple comparisons with a Bonferroni correction. There are three comparisons so divide .05 by 3, so the significance threshold is *p* &lt; .0167. There was a statistically significant difference in survival distributions for Asymptomatic vs Bedridden, *p* &lt; .001, and Ambulatory vs Bedridden, *p* = `r km_pairwise$p.value["Bedridden", "Ambulatory"] %&gt;% number(.001)`, but not for Asymptomatic vs Ambulatory, *p* = <span class="in">`r km_pairwise$p.value["Ambulatory", "Asymptomatic"] %&gt;% number(.001)`</span>.</span>
+<span id="cb23-241"><a href="#cb23-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-242"><a href="#cb23-242" aria-hidden="true" tabindex="-1"></a><span class="fu">## Reporting </span></span>
+<span id="cb23-243"><a href="#cb23-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-244"><a href="#cb23-244" aria-hidden="true" tabindex="-1"></a>The guidelines for reporting the Kaplan-Meier test are from Laerd's Kaplan-Meier using SPSS Statistics <span class="co">[</span><span class="ot">@Laerd2015</span><span class="co">]</span>. Report the results like this.</span>
+<span id="cb23-245"><a href="#cb23-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-246"><a href="#cb23-246" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; </span><span class="in">`r nrow(d_lung) %&gt;% comma(1)`</span><span class="at"> Men and women diagnosed with advanced lung cancer aged </span><span class="in">`r min(d_lung$age)`</span><span class="at"> to </span><span class="in">`r max(d_lung$age)`</span><span class="at"> were monitored up to three years until time of death. Participants were classified into three groups according to their ECOG performance score: *asymptomatic* (n = `r d_lung %&gt;% count(ph.ecog) %&gt;% filter(ph.ecog == "Asymptomatic") %&gt;% pull(n)`), *symptomatic but completely ambulatory* (n = `r d_lung %&gt;% count(ph.ecog) %&gt;% filter(ph.ecog == "Ambulatory") %&gt;% pull(n)`), and *bedridden at least part of the day* (n = `r d_lung %&gt;% count(ph.ecog) %&gt;% filter(ph.ecog == "Bedridden") %&gt;% pull(n)`). A Kaplan-Meier survival analysis (Kaplan &amp; Meier, 1958) was conducted to compare survival times among the three ECOG performance scores. Censored cases were negatively associated with symptom severity, *asymptomatic*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Asymptomatic")`, *symptomatic but completely ambulatory*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Ambulatory")`, and *bedridden*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Bedridden")` study groups. Participants that were asymptomatic had a median survival time of `r inline_text(km_gt, "ph.ecog", level = "Asymptomatic", column = stat_1)` days. This was longer than the ambulatory group, `r inline_text(km_gt, "ph.ecog", level = "Ambulatory", column = stat_1)` days, and bedridden group, `r inline_text(km_gt, "ph.ecog", level = "Bedridden", column = stat_1)` days. A log rank test was run to determine if there were differences in the survival distribution for the different types of intervention. The survival distributions for the three interventions were statistically significantly different, $\chi^2$(2) = `r km_diff$chisq %&gt;% number(.1)`, *p* &lt; .001. Pairwise log rank comparisons were conducted to determine which intervention groups had different survival distributions. A Bonferroni correction was made with statistical significance accepted at the *p* &lt; .017 level. There was a statistically significant difference in survival distributions for the aymptomatic vs bedridden, *p* &lt; .001, and ambulatory vs bedridden, *p* = `r km_pairwise$p.value["Bedridden", "Ambulatory"] %&gt;% number(.001)`, groups. However, the survival distributions for the asymptomatic vs ambulatory group were not statistically significant, *p* = </span><span class="in">`r km_pairwise$p.value["Ambulatory", "Asymptomatic"] %&gt;% number(.001)`</span></span>
+<span id="cb23-247"><a href="#cb23-247" aria-hidden="true" tabindex="-1"></a></span>
+</code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
