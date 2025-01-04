@@ -2,4 +2,4 @@
 
 These notes are a personal reference related to my survival analysis work. 
 
-Repo for this quarto book: [https://github.com/mpfoley73/survey](https://github.com/mpfoley73/survival).
+Repo for this quarto book: [https://github.com/mpfoley73/survival](https://github.com/mpfoley73/survival).
