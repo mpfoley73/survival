@@ -34,9 +34,7 @@ format:
     code-tools: true
     code-overflow: scroll
     code-fold: false
-    fig-cap-location: top
-  pdf:
-    documentclass: scrreprt
+    fig-cap-location: bottom
 
 editor: source
 
