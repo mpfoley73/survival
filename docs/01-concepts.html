@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.5.57">
+<meta name="generator" content="quarto-1.6.43">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -91,10 +91,10 @@ div.csl-indent {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-d4d76bf8491c20bad77d141916dc28e1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-8da5b4427184b79ecddefad3d342027e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -253,7 +253,8 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#logrank" id="toc-logrank" class="nav-link active" data-scroll-target="#logrank"><span class="header-section-number">1.1</span> Log-Rank Test</a></li>
+  <li><a href="#terminology" id="toc-terminology" class="nav-link active" data-scroll-target="#terminology"><span class="header-section-number">1.1</span> Terminology</a></li>
+  <li><a href="#logrank" id="toc-logrank" class="nav-link" data-scroll-target="#logrank"><span class="header-section-number">1.2</span> Log-Rank Test</a></li>
   </ul>
 </nav>
     </div>
@@ -262,7 +263,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Concepts</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Concepts</span></h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
 </div>
 
 
@@ -285,14 +286,38 @@ window.Quarto = {
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survival)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survminer)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>This chapter introduces survival analysis concepts.</p>
-<p>Survival analyses model time-to-event. They differ from linear regression in two respects. Event times are typically skewed right with many early events and few late ones, violating linear regression’s normality assumption. Survival analyses must also manage censoring, an unknown starting event (left censoring) and/or ending event (right censoring)<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. Censoring occurs if the event does not take place by the end of the study window, or the subject is in some way lost to follow-up. In <a href="#fig-1" class="quarto-xref">Figure&nbsp;<span>1.1</span></a>, subjects 3, 5, 9, and 15 either did not have the event or dropped out of the study. Censored observations do not reveal their total time to event, but they do reveal at least their minimum.</p>
+<p>Survival analyses model time-to-event. They differ from linear regression in two respects. Event times are typically skewed right with many early events and few late ones, violating linear regression’s normality assumption. Survival analyses must also manage censoring, an unknown starting event (left censoring) and/or ending event (right censoring)<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. Censoring occurs if the event does not take place by the end of the study window, or the subject is in some way lost to follow-up. In <a href="#fig-1" class="quarto-xref">Figure&nbsp;<span class="quarto-unresolved-ref">fig-1</span></a>, subjects 3, 5, 9, and 15 either did not have the event or dropped out of the study. Censored observations do not reveal their total time to event, but they do reveal at least their minimum.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>survival<span class="sc">::</span>lung[<span class="dv">81</span><span class="sc">:</span><span class="dv">100</span>,] <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">subject =</span> <span class="fu">factor</span>(<span class="fu">row_number</span>()),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">status =</span> <span class="fu">factor</span>(status, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Censor"</span>, <span class="st">"Event"</span>)),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">start_time =</span> age <span class="sc">*</span> <span class="dv">4</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">time =</span> <span class="fu">case_when</span>(</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      subject <span class="sc">==</span> <span class="dv">3</span> <span class="sc">~</span> time <span class="sc">+</span> <span class="dv">750</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      subject <span class="sc">==</span> <span class="dv">5</span> <span class="sc">~</span> time <span class="sc">+</span> <span class="dv">100</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      subject <span class="sc">==</span> <span class="dv">9</span> <span class="sc">~</span> time <span class="sc">+</span> <span class="dv">200</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      subject <span class="sc">==</span> <span class="dv">15</span> <span class="sc">~</span> time <span class="sc">+</span> <span class="dv">400</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> time</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">fct_rev</span>(subject))) <span class="sc">+</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(<span class="fu">aes</span>(<span class="at">yend =</span> <span class="fu">fct_rev</span>(subject), <span class="at">x =</span> start_time, <span class="at">xend =</span> start_time <span class="sc">+</span> time), <span class="at">size =</span> <span class="dv">2</span>, <span class="at">color =</span> <span class="st">"darkgray"</span>) <span class="sc">+</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x =</span> start_time), <span class="at">color =</span> <span class="st">"gray60"</span>, <span class="at">size =</span> <span class="fl">2.5</span>) <span class="sc">+</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x =</span> start_time <span class="sc">+</span> time, <span class="at">color =</span> status), <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> <span class="dv">1075</span>), <span class="at">color =</span> <span class="st">"gray60"</span>, <span class="at">linetype =</span> <span class="dv">2</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_light</span>() <span class="sc">+</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>) <span class="sc">+</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Survival Data - How to handle censoring?"</span>, <span class="at">x =</span> <span class="st">"observation period"</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Subject"</span>, <span class="at">color =</span> <span class="cn">NULL</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <div id="fig-1" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-fig" id="fig-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1.1: Censored observations still contain information. Excluding or ignoring this information can lead to biased and inefficient predictions.
+Figure&nbsp;1.1: Censored observations still contain information. Excluding or ignoring leads to biased and inefficient predictions.
 </figcaption>
 <div aria-describedby="fig-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="01-concepts_files/figure-html/fig-1-1.png" class="img-fluid figure-img" width="672">
@@ -301,11 +326,13 @@ Figure&nbsp;1.1: Censored observations still contain information. Excluding or i
 </div>
 </div>
 </div>
-<p>Some analyses treat time-to-event as a continuous outcome with survival times following a parametric distribution such as the Weibull (<a href="03-parametric.html" class="quarto-xref"><span>Chapter 3</span></a>). A more common approach is the <em>semi-parametric</em> model, with an unspecified time-to-event distribution estimated by non-parameteric methods coupled with covariate effects following a parametric distribution. The Cox proportional hazards model is a semi-parametric model (<a href="04-cox.html" class="quarto-xref"><span>Chapter 4</span></a>). A third approach treats time-to-event as a series of person-periods with binary outcomes that follow a logit or cumulative log-log distribution. These models are called discrete-time models (<a href="05-discrete-time.html" class="quarto-xref"><span>Chapter 5</span></a>). A fourth approach employs machine learning models such as trees and SVMs to optimize predictive power at some expense of interpretability (<span class="quarto-unresolved-ref">?sec-m</span>)).</p>
-<p>Any of these approaches can produce accurate and efficient results <span class="citation" data-cites="Suresh2022">(<a href="08-references.html#ref-Suresh2022" role="doc-biblioref">Suresh 2022</a>)</span>, but the typical survival analysis uses Kaplan-Meier plots to visualize survival curves (Chapter <a href="02-km.html" class="quarto-xref"><span>Chapter 2</span></a>), log-rank tests to compare survival curves among groups, and Cox proportional hazards regression to describe the effect of explanatory variables on survival. In R, use the <strong>survival</strong> package to model, <strong>survminer</strong> to visualize, and <strong>gtsummary</strong> for summarize. The following chapters cover the general concepts underlying survival analysis and the four approaches to estimation.</p>
-<p>Let <span class="math inline">\(T^*\)</span> be a random variable representing the time until the event, and <span class="math inline">\(U\)</span> be a random variable representing the time until (right) censoring. The observed value is whichever event comes first, <span class="math inline">\(T = \mathrm{min}(T^*, U)\)</span>. The time, <span class="math inline">\(T\)</span>, and status, <span class="math inline">\(\delta = I[T^* &lt; U]\)</span> (1 = censored, 2 = event), constitutes the response in a survival analysis. The <code>survival::lung</code> data set is typical, where <code>time</code> = <span class="math inline">\(T\)</span> and <code>status</code> = <span class="math inline">\(\delta\)</span>, and the other variables are identifying features for the subject.</p>
+<p>Some analyses treat time-to-event as a continuous outcome with survival times following a parametric distribution such as the Weibull (<a href="#sec-parametric" class="quarto-xref"><span class="quarto-unresolved-ref">sec-parametric</span></a>). A more common approach is the <em>semi-parametric</em> model, with an unspecified time-to-event distribution estimated by non-parameteric methods coupled with covariate effects following a parametric distribution. The Cox proportional hazards model is a semi-parametric model (<a href="#sec-semiparametric" class="quarto-xref"><span class="quarto-unresolved-ref">sec-semiparametric</span></a>). A third approach treats time-to-event as a series of person-periods with binary outcomes that follow a logit or cumulative log-log distribution. These models are called discrete-time models (<a href="#sec-discrete" class="quarto-xref"><span class="quarto-unresolved-ref">sec-discrete</span></a>). A fourth approach employs machine learning models such as trees and SVMs to optimize predictive power at some expense of interpretability (<a href="#sec-ml" class="quarto-xref"><span class="quarto-unresolved-ref">sec-ml</span></a>)).</p>
+<p>Any of these approaches can produce accurate and efficient results <span class="citation" data-cites="Suresh2022">(<a href="#ref-Suresh2022" role="doc-biblioref">Suresh 2022</a>)</span>, but the typical survival analysis uses Kaplan-Meier plots to visualize survival curves (<a href="#sec-km" class="quarto-xref"><span class="quarto-unresolved-ref">sec-km</span></a>), log-rank tests to compare survival curves among groups, and Cox proportional hazards regression to describe the effect of explanatory variables on survival. In R, use the <strong>survival</strong> package to model, <strong>survminer</strong> to visualize, and <strong>gtsummary</strong> for summarize.</p>
+<section id="terminology" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="terminology"><span class="header-section-number">1.1</span> Terminology</h2>
+<p>Let <span class="math inline">\(T^*\)</span> be a random variable representing the time until the event, and <span class="math inline">\(U\)</span> be a random variable representing the time until (right) censoring. The observed value is whichever event comes first, <span class="math inline">\(T = \mathrm{min}(T^*, U)\)</span>. The time, <span class="math inline">\(T\)</span>, and status, <span class="math inline">\(\delta = I[T^* &lt; U]\)</span> (1 = censored, 2 = event), constitutes the response in a survival analysis. The <code>survival::lung</code> dataset is typical, where <code>time</code> = <span class="math inline">\(T\)</span> and <code>status</code> = <span class="math inline">\(\delta\)</span>, and the other variables are identifying features for the subject.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>survival<span class="sc">::</span>lung <span class="sc">%&gt;%</span> <span class="fu">head</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(survival<span class="sc">::</span>lung)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  inst time status age sex ph.ecog ph.karno pat.karno meal.cal wt.loss
 1    3  306      2  74   1       1       90       100     1175      NA
@@ -332,8 +359,9 @@ Figure&nbsp;1.1: Censored observations still contain information. Excluding or i
 <p>Use the survival function to estimate the mean survival time, <span class="math inline">\(E(T) = \int S(t)dt\)</span>, and median survival time, <span class="math inline">\(S(t) = 0.5\)</span>.</p>
 <p>Take the exponential distribution as a quick example. It has a constant hazard, <span class="math inline">\(h(t) = \lambda\)</span>. The cumulative hazard is <span class="math inline">\(H(t) = \int_0^t \lambda du = \lambda t\)</span>. The survival function is <span class="math inline">\(S(t) = e^{-\lambda t}\)</span>. The probability of failure at time <span class="math inline">\(t\)</span> is <span class="math inline">\(f(t) = \lambda e^{-\lambda t}\)</span>. The expected time to failure is <span class="math inline">\(E(t) = \int_0^\infty e^{-\lambda t} dt = 1 / \lambda\)</span>, and the median time to failure is <span class="math inline">\(S(t) = e^{-\lambda t} = .5\)</span>, or <span class="math inline">\(t_{med} = \log(2) / \lambda\)</span>.</p>
 <p>There are parametric and non-parametric methods to estimate a survival curve. The usual non-parametric method is the <em>Kaplan-Meier</em> estimator. The usual parametric method is the <em>Weibull</em> distribution. In between is the most common way to estimate a survivor curve, the <em>Cox proportional hazards</em> model.</p>
-<section id="logrank" class="level2" data-number="1.1">
-<h2 data-number="1.1" class="anchored" data-anchor-id="logrank"><span class="header-section-number">1.1</span> Log-Rank Test</h2>
+</section>
+<section id="logrank" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="logrank"><span class="header-section-number">1.2</span> Log-Rank Test</h2>
 <p>It is not obvious how to compare two survival distributions because they can cross, diverge, etc. When observations do not follow a parametric distribution function, compare them with the non-parametric log-rank test. The alternative hypothesis, termed the Lehmann alternative, is that one survival distribution is uniformly higher than the other, <span class="math inline">\(H_A : S_1(t) = [S_0(t)]^\psi\)</span>, or equivalently, the hazard functions are proportional, <span class="math inline">\(h_1(t) = \psi h_0(t)\)</span>, with <span class="math inline">\(H_A: \psi \ne 1\)</span>.</p>
 <p>At each <span class="math inline">\(t\)</span>, you could construct a 2x2 contingency table between event/no-event and curves A and B.</p>
 <table class="caption-top table">
@@ -374,9 +402,9 @@ Figure&nbsp;1.1: Censored observations still contain information. Excluding or i
 <p><span class="math inline">\(U^2\)</span> is a chi-square random variable with one degree of freedom.</p>
 <p><span class="math display">\[U^2 = \frac{U_0^2}{V_0} \sim \chi_1^2\]</span></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>lung_1 <span class="ot">&lt;-</span> survival<span class="sc">::</span>lung <span class="sc">%&gt;%</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex =</span> <span class="fu">factor</span>(sex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Male"</span>, <span class="st">"Female"</span>)))</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>(km_diff <span class="ot">&lt;-</span> <span class="fu">survdiff</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> sex, <span class="at">data =</span> lung_1))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>lung_1 <span class="ot">&lt;-</span> survival<span class="sc">::</span>lung <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex =</span> <span class="fu">factor</span>(sex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Male"</span>, <span class="st">"Female"</span>)))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>(km_diff <span class="ot">&lt;-</span> <span class="fu">survdiff</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> sex, <span class="at">data =</span> lung_1))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Call:
 survdiff(formula = Surv(time, status) ~ sex, data = lung_1)
@@ -389,12 +417,12 @@ sex=Female  90       53     73.4      5.68      10.3
 </div>
 </div>
 <p>The <em>p</em>-value for <span class="math inline">\(\chi_1^2\)</span> = 10.3 is <code>1 - pchisq(km_diff$chisq, length(km_diff$n) - 1)</code> = 0.001, so reject <span class="math inline">\(H_0\)</span> that males and females have identical survival patterns.</p>
-<p>while the log-rank test can determine whether survival differs between groups, it does not estimate the effect size. It is a statistical, but not a clinical, assessment of the factor’s impact <span class="citation" data-cites="Clark2003b">(<a href="08-references.html#ref-Clark2003b" role="doc-biblioref">Bradburn 2003</a>)</span>.</p>
+<p>While the log-rank test can determine whether survival differs between groups, it does not estimate the effect size. It is a statistical, but not a clinical, assessment of the factor’s impact <span class="citation" data-cites="Clark2003b">(<a href="#ref-Clark2003b" role="doc-biblioref">Bradburn 2003</a>)</span>.</p>
 
 
 <!-- -->
 
-<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-Clark2003b" class="csl-entry" role="listitem">
 Bradburn, Clark, M. J. 2003. <span>“Survival Analysis Part II: Multivariate Data Analysis–an Introduction to Concepts and Methods.”</span> <em>British Journal of Cancer</em> 89 (3). <a href="https://doi.org/10.1038/sj.bjc.6601119">https://doi.org/10.1038/sj.bjc.6601119</a>.
 </div>
@@ -409,7 +437,7 @@ Suresh, Severn, K. 2022. <span>“Survival Prediction Models: An Introduction to
 <section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr>
 <ol>
-<li id="fn1"><p><span class="citation" data-cites="Clark2003a">Clark (<a href="08-references.html#ref-Clark2003a" role="doc-biblioref">2003</a>)</span> has discussion of censoring types. Right censoring is most common.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn1"><p><span class="citation" data-cites="Clark2003a">Clark (<a href="#ref-Clark2003a" role="doc-biblioref">2003</a>)</span> has discussion of censoring types. Right censoring is most common.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn2"><p>Many texts represent hazard with the <span class="math inline">\(\lambda\)</span> symbol instead of <span class="math inline">\(h\)</span>.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
@@ -497,8 +525,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   });
   clipboard.on('success', onCopySuccess);
   if (window.document.getElementById('quarto-embedded-source-code-modal')) {
-    // For code content inside modals, clipBoardJS needs to be initialized with a container option
-    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
     const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
       text: getTextToCopy,
       container: window.document.getElementById('quarto-embedded-source-code-modal')
@@ -660,7 +686,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       if (window.Quarto?.typesetMath) {
         window.Quarto.typesetMath(note);
       }
-      // TODO in 1.5, we should make sure this works without a callout special case
       if (note.classList.contains("callout")) {
         return note.outerHTML;
       } else {
@@ -898,125 +923,125 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Concepts</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="in">```{r message=FALSE, warning=FALSE}</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="in">library(tidyverse)</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="in">library(scales)</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="in">library(survival)</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="in">library(survminer)</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>This chapter introduces survival analysis concepts.</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>Survival analyses model time-to-event. They differ from linear regression in two respects. Event times are typically skewed right with many early events and few late ones, violating linear regression's normality assumption. Survival analyses must also manage censoring, an unknown starting event (left censoring) and/or ending event (right censoring)^<span class="co">[</span><span class="ot">@Clark2003a has discussion of censoring types. Right censoring is most common.</span><span class="co">]</span>. Censoring occurs if the event does not take place by the end of the study window, or the subject is in some way lost to follow-up. In @fig-1, subjects 3, 5, 9, and 15 either did not have the event or dropped out of the study. Censored observations do not reveal their total time to event, but they do reveal at least their minimum.</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="in">```{r fig-1, fig.cap='Censored observations still contain information. Excluding or ignoring this information can lead to biased and inefficient predictions.', echo=FALSE, message=FALSE, warning=FALSE}</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="in">library(tidyverse)</span></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="in">survival::lung[81:100,] %&gt;%</span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(</span></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="in">    subject = factor(row_number()),</span></span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="in">    status = factor(status, levels = c(1, 2), labels = c("Censor", "Event")),</span></span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="in">    start_time = age * 4,</span></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="in">    time = case_when(</span></span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="in">      subject == 3 ~ time + 750,</span></span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="in">      subject == 5 ~ time + 100,</span></span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="in">      subject == 9 ~ time + 200,</span></span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="in">      subject == 15 ~ time + 400,</span></span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="in">      TRUE ~ time</span></span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="in">    )</span></span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="in">  ggplot(aes(y = fct_rev(subject))) +</span></span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_segment(aes(yend = fct_rev(subject), x = start_time, xend = start_time + time), size = 2, color = "darkgray") +</span></span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_point(aes(x = start_time), color = "gray60", size = 2.5) +</span></span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_point(aes(x = start_time + time, color = status), size = 3) +</span></span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_vline(aes(xintercept = 1075), color = "gray60", linetype = 2, size = 1) +</span></span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="in">  theme_light() +</span></span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="in">  theme(legend.position = "top") +</span></span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="in">  labs(title = "Survival Data - How to handle censoring?", x = "observation period",</span></span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="in">       y = "Subject", color = NULL)</span></span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>Some analyses treat time-to-event as a continuous outcome with survival times following a parametric distribution such as the Weibull (@sec-parametric). A more common approach is the *semi-parametric* model, with an unspecified time-to-event distribution estimated by non-parameteric methods coupled with covariate effects following a parametric distribution. The Cox proportional hazards model is a semi-parametric model (@sec-semiparametric). A third approach treats time-to-event as a series of person-periods with binary outcomes that follow a logit or cumulative log-log distribution. These models are called discrete-time models (@sec-discrete). A fourth approach employs machine learning models such as trees and SVMs to optimize predictive power at some expense of interpretability (@sec-m)). </span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>Any of these approaches can produce accurate and efficient results <span class="co">[</span><span class="ot">@Suresh2022</span><span class="co">]</span>, but the typical survival analysis uses Kaplan-Meier plots to visualize survival curves (Chapter @sec-km), log-rank tests to compare survival curves among groups, and Cox proportional hazards regression to describe the effect of explanatory variables on survival. In R, use the **survival** package to model, **survminer** to visualize, and **gtsummary** for summarize. The following chapters cover the general concepts underlying survival analysis and the four approaches to estimation.</span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>Let $T^*$ be a random variable representing the time until the event, and $U$ be a random variable representing the time until (right) censoring. The observed value is whichever event comes first, $T = \mathrm{min}(T^*, U)$. The time, $T$, and status, $\delta = I[T^* &lt; U]$ (1 = censored, 2 = event), constitutes the response in a survival analysis. The <span class="in">`survival::lung`</span> data set is typical, where <span class="in">`time`</span> = $T$ and <span class="in">`status`</span> = $\delta$, and the other variables are identifying features for the subject.</span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>survival<span class="sc">::</span>lung <span class="sc">%&gt;%</span> <span class="fu">head</span>()</span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>Censoring sometimes occurs when subjects are monitored for a fixed period of time (Type I), the study is halted after a pre-specified level of events are reached (Type II), or the subject drops out for a reason other than the event of interest (random censoring).</span>
-<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>You can specify the survival distribution either with a *survival function*, $S(t)$, or with a *hazard function*, $h(t)$^<span class="co">[</span><span class="ot">Many texts represent hazard with the $\lambda$ symbol instead of $h$.</span><span class="co">]</span>. Let $F(t) = P(T \le t)$ be the cumulative risk function (aka, cumulative incidence), the probability of the event occurring on or before time $t$. $S(t)$ is its complement, $S(t) = 1 - F(t)$. </span>
-<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>$$S(t) = P(T &gt; t).$$</span>
-<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>The hazard function is the instantaneous event rate at $t$ given survival up to $t$,</span>
-<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>$$h(t) = \lim_{\delta \rightarrow 0}{\frac{P(t &lt; T &lt; t + \delta|T &gt; t)}{\delta}}.$$</span>
-<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>An instantaneous event rate has no intuitive appeal, but think of it in discrete time where $\delta &gt; 0$. $h(t + \delta)$ is the *conditional probability* of an event at the discrete interval $t + \delta$, conditioned on those at risk during that interval.</span>
-<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>The survival and hazard functions are related by the multiplication rule, $P(AB) = P(A|B)P(B)$. The event probability at $t$, $f(t) = F'(t)$, is the probability of the event at $t$ given survival up to $t$ (the hazard function) multiplied by the probability of survival up to $t$ (the survival function).</span>
-<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>$$f(t) = h(t) S(t).$$</span>
-<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>Again in discrete terms, survival up to interval $t$ is the sum product of the survival probabilities at each preceding period, $S(t) = \Pi_{i = 1}^t <span class="co">[</span><span class="ot">1 - h(t)</span><span class="co">]</span>$. It is the complement of the cumulative risk.</span>
-<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>Rearranging, $h(t)dt = \frac{f(t)}{S(t)}dt$ describes the prognosis for a subject who has survived through time $t$. </span>
-<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>$S(t)$ is also the negative exponent of the cumulative hazard function,</span>
-<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>$$S(t) = e^{-H(t)}.$$</span>
-<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>Taking the log and rearranging, $h(t) = \frac{d}{dt} <span class="co">[</span><span class="ot">\log S(t)</span><span class="co">]</span>$, the negative time derivative of the log cumulative hazard.</span>
-<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>Use the survival function to estimate the mean survival time, $E(T) = \int S(t)dt$, and median survival time, $S(t) = 0.5$.</span>
-<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>Take the exponential distribution as a quick example. It has a constant hazard, $h(t) = \lambda$. The cumulative hazard is $H(t) = \int_0^t \lambda du = \lambda t$. The survival function is $S(t) = e^{-\lambda t}$. The probability of failure at time $t$ is $f(t) = \lambda e^{-\lambda t}$. The expected time to failure is $E(t) = \int_0^\infty e^{-\lambda t} dt = 1 / \lambda$, and the median time to failure is $S(t) = e^{-\lambda t} = .5$, or $t_{med} = \log(2) / \lambda$.</span>
-<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>There are parametric and non-parametric methods to estimate a survival curve.  The usual non-parametric method is the *Kaplan-Meier* estimator.  The usual parametric method is the *Weibull* distribution. In between is the most common way to estimate a survivor curve, the *Cox proportional hazards* model.</span>
-<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a><span class="fu">## Log-Rank Test {#logrank}</span></span>
-<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>It is not obvious how to compare two survival distributions because they can cross, diverge, etc. When observations do not follow a parametric distribution function, compare them with the non-parametric log-rank test. The alternative hypothesis, termed the Lehmann alternative, is that one survival distribution is uniformly higher than the other, $H_A : S_1(t) = <span class="co">[</span><span class="ot">S_0(t)</span><span class="co">]</span>^\psi$, or equivalently, the hazard functions are proportional, $h_1(t) = \psi h_0(t)$, with $H_A: \psi \ne 1$.</span>
-<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>At each $t$, you could construct a 2x2 contingency table between event/no-event and curves A and B. </span>
-<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>|              |Curve A           |Curve B           |Total         |</span>
-<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>|--------------|------------------|------------------|--------------|</span>
-<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>|Event         |$d_{Ai}$          |$d_{Bi}$          |$d_i$         |</span>
-<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>|No Event      |$n_{Ai} - d_{0i}$ |$n_{Bi} - d_{1i}$ |$n_i - d_i$   |</span>
-<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>|Total         |$n_{Ai}$          |$n_{Bi}$          |$n_i$         |</span>
-<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>Holding the margins as fixed, the probability of observing $d_{Ai}$ events in curve A at time $i$ follows a <span class="co">[</span><span class="ot">hypergeometric</span><span class="co">](https://bookdown.org/mpfoley1973/probability/hypergeometric.html)</span> distribution.</span>
-<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a>$$f(d_{Ai} | n_{Ai}, n_{Bi}, d_i) = \frac{{{n_{Ai}}\choose{d_{Ai}}}{{n_{Bi}}\choose{d_{Bi}}}}{{n_i}\choose{d_i}}$$</span>
-<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a>The expected value is $e_{Ai} = E(d_{Ai}) = \frac{d_i}{n_i} \cdot n_{0i}$ with variance $v_{Ai} = Var(d_{Ai}) = d_{i} \cdot \frac{n_{Ai}}{n_i}  \cdot \frac{n_{1i}}{n_i} \cdot \frac{n_i - d_i}{n_i - 1}$. </span>
-<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a>The log-rank test statistic is the sum of the differences between the observed and expected events, $U_0 = \sum (d_{Ai} - e_{Ai})$, normalized by dividing by the square-root of its variance, $V_0 = Var({U_0}) = \sum v_{Ai}$.</span>
-<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>$$U = \frac{U_0}{\sqrt{V_0}} \sim N(0, 1)$$</span>
-<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>$U^2$ is a chi-square random variable with one degree of freedom.</span>
-<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a>$$U^2 = \frac{U_0^2}{V_0} \sim \chi_1^2$$</span>
-<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a>lung_1 <span class="ot">&lt;-</span> survival<span class="sc">::</span>lung <span class="sc">%&gt;%</span></span>
-<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex =</span> <span class="fu">factor</span>(sex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Male"</span>, <span class="st">"Female"</span>)))</span>
-<span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a>(km_diff <span class="ot">&lt;-</span> <span class="fu">survdiff</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> sex, <span class="at">data =</span> lung_1))</span>
-<span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a>The *p*-value for $\chi_1^2$ = <span class="in">`r comma(km_diff$chisq, .1)`</span> is <span class="in">`1 - pchisq(km_diff$chisq, length(km_diff$n) - 1)`</span> = <span class="in">`r comma(1 - pchisq(km_diff$chisq, length(km_diff$n) - 1), .001)`</span>, so reject $H_0$ that males and females have identical survival patterns.</span>
-<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a>while the log-rank test can determine whether survival differs between groups, it does not estimate the effect size. It is a statistical, but not a clinical, assessment of the factor's impact <span class="co">[</span><span class="ot">@Clark2003b</span><span class="co">]</span>. </span>
+<div class="sourceCode" id="cb7" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Concepts</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="in">```{r message=FALSE, warning=FALSE}</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="in">library(tidyverse)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="in">library(scales)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="in">library(survival)</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="in">library(survminer)</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>Survival analyses model time-to-event. They differ from linear regression in two respects. Event times are typically skewed right with many early events and few late ones, violating linear regression's normality assumption. Survival analyses must also manage censoring, an unknown starting event (left censoring) and/or ending event (right censoring)^<span class="co">[</span><span class="ot">@Clark2003a has discussion of censoring types. Right censoring is most common.</span><span class="co">]</span>. Censoring occurs if the event does not take place by the end of the study window, or the subject is in some way lost to follow-up. In @fig-1, subjects 3, 5, 9, and 15 either did not have the event or dropped out of the study. Censored observations do not reveal their total time to event, but they do reveal at least their minimum.</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="in">```{r fig-1}</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="in">#| fig-cap: "Censored observations still contain information. Excluding or ignoring leads to biased and inefficient predictions."</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="in">#| code-fold: true</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="in">survival::lung[81:100,] %&gt;%</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="in">    subject = factor(row_number()),</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="in">    status = factor(status, levels = c(1, 2), labels = c("Censor", "Event")),</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="in">    start_time = age * 4,</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="in">    time = case_when(</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="in">      subject == 3 ~ time + 750,</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="in">      subject == 5 ~ time + 100,</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="in">      subject == 9 ~ time + 200,</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="in">      subject == 15 ~ time + 400,</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="in">      TRUE ~ time</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="in">    )</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="in">  ggplot(aes(y = fct_rev(subject))) +</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_segment(aes(yend = fct_rev(subject), x = start_time, xend = start_time + time), size = 2, color = "darkgray") +</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_point(aes(x = start_time), color = "gray60", size = 2.5) +</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_point(aes(x = start_time + time, color = status), size = 3) +</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_vline(aes(xintercept = 1075), color = "gray60", linetype = 2, size = 1) +</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="in">  theme_light() +</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="in">  theme(legend.position = "top") +</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="in">  labs(title = "Survival Data - How to handle censoring?", x = "observation period",</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="in">       y = "Subject", color = NULL)</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>Some analyses treat time-to-event as a continuous outcome with survival times following a parametric distribution such as the Weibull (@sec-parametric). A more common approach is the *semi-parametric* model, with an unspecified time-to-event distribution estimated by non-parameteric methods coupled with covariate effects following a parametric distribution. The Cox proportional hazards model is a semi-parametric model (@sec-semiparametric). A third approach treats time-to-event as a series of person-periods with binary outcomes that follow a logit or cumulative log-log distribution. These models are called discrete-time models (@sec-discrete). A fourth approach employs machine learning models such as trees and SVMs to optimize predictive power at some expense of interpretability (@sec-ml)). </span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>Any of these approaches can produce accurate and efficient results <span class="co">[</span><span class="ot">@Suresh2022</span><span class="co">]</span>, but the typical survival analysis uses Kaplan-Meier plots to visualize survival curves (@sec-km), log-rank tests to compare survival curves among groups, and Cox proportional hazards regression to describe the effect of explanatory variables on survival. In R, use the **survival** package to model, **survminer** to visualize, and **gtsummary** for summarize.</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a><span class="fu">## Terminology {#terminology}</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>Let $T^*$ be a random variable representing the time until the event, and $U$ be a random variable representing the time until (right) censoring. The observed value is whichever event comes first, $T = \mathrm{min}(T^*, U)$. The time, $T$, and status, $\delta = I[T^* &lt; U]$ (1 = censored, 2 = event), constitutes the response in a survival analysis. The <span class="in">`survival::lung`</span> dataset is typical, where <span class="in">`time`</span> = $T$ and <span class="in">`status`</span> = $\delta$, and the other variables are identifying features for the subject.</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(survival<span class="sc">::</span>lung)</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>Censoring sometimes occurs when subjects are monitored for a fixed period of time (Type I), the study is halted after a pre-specified level of events are reached (Type II), or the subject drops out for a reason other than the event of interest (random censoring).</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>You can specify the survival distribution either with a *survival function*, $S(t)$, or with a *hazard function*, $h(t)$^<span class="co">[</span><span class="ot">Many texts represent hazard with the $\lambda$ symbol instead of $h$.</span><span class="co">]</span>. Let $F(t) = P(T \le t)$ be the cumulative risk function (aka, cumulative incidence), the probability of the event occurring on or before time $t$. $S(t)$ is its complement, $S(t) = 1 - F(t)$. </span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>$$S(t) = P(T &gt; t).$$</span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>The hazard function is the instantaneous event rate at $t$ given survival up to $t$,</span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>$$h(t) = \lim_{\delta \rightarrow 0}{\frac{P(t &lt; T &lt; t + \delta|T &gt; t)}{\delta}}.$$</span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>An instantaneous event rate has no intuitive appeal, but think of it in discrete time where $\delta &gt; 0$. $h(t + \delta)$ is the *conditional probability* of an event at the discrete interval $t + \delta$, conditioned on those at risk during that interval.</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>The survival and hazard functions are related by the multiplication rule, $P(AB) = P(A|B)P(B)$. The event probability at $t$, $f(t) = F'(t)$, is the probability of the event at $t$ given survival up to $t$ (the hazard function) multiplied by the probability of survival up to $t$ (the survival function).</span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>$$f(t) = h(t) S(t).$$</span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>Again in discrete terms, survival up to interval $t$ is the sum product of the survival probabilities at each preceding period, $S(t) = \Pi_{i = 1}^t <span class="co">[</span><span class="ot">1 - h(t)</span><span class="co">]</span>$. It is the complement of the cumulative risk.</span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>Rearranging, $h(t)dt = \frac{f(t)}{S(t)}dt$ describes the prognosis for a subject who has survived through time $t$. </span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>$S(t)$ is also the negative exponent of the cumulative hazard function,</span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a>$$S(t) = e^{-H(t)}.$$</span>
+<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>Taking the log and rearranging, $h(t) = \frac{d}{dt} <span class="co">[</span><span class="ot">\log S(t)</span><span class="co">]</span>$, the negative time derivative of the log cumulative hazard.</span>
+<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a>Use the survival function to estimate the mean survival time, $E(T) = \int S(t)dt$, and median survival time, $S(t) = 0.5$.</span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>Take the exponential distribution as a quick example. It has a constant hazard, $h(t) = \lambda$. The cumulative hazard is $H(t) = \int_0^t \lambda du = \lambda t$. The survival function is $S(t) = e^{-\lambda t}$. The probability of failure at time $t$ is $f(t) = \lambda e^{-\lambda t}$. The expected time to failure is $E(t) = \int_0^\infty e^{-\lambda t} dt = 1 / \lambda$, and the median time to failure is $S(t) = e^{-\lambda t} = .5$, or $t_{med} = \log(2) / \lambda$.</span>
+<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a>There are parametric and non-parametric methods to estimate a survival curve.  The usual non-parametric method is the *Kaplan-Meier* estimator.  The usual parametric method is the *Weibull* distribution. In between is the most common way to estimate a survivor curve, the *Cox proportional hazards* model.</span>
+<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a><span class="fu">## Log-Rank Test {#logrank}</span></span>
+<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a>It is not obvious how to compare two survival distributions because they can cross, diverge, etc. When observations do not follow a parametric distribution function, compare them with the non-parametric log-rank test. The alternative hypothesis, termed the Lehmann alternative, is that one survival distribution is uniformly higher than the other, $H_A : S_1(t) = <span class="co">[</span><span class="ot">S_0(t)</span><span class="co">]</span>^\psi$, or equivalently, the hazard functions are proportional, $h_1(t) = \psi h_0(t)$, with $H_A: \psi \ne 1$.</span>
+<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a>At each $t$, you could construct a 2x2 contingency table between event/no-event and curves A and B. </span>
+<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a>|              |Curve A           |Curve B           |Total         |</span>
+<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a>|--------------|------------------|------------------|--------------|</span>
+<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a>|Event         |$d_{Ai}$          |$d_{Bi}$          |$d_i$         |</span>
+<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a>|No Event      |$n_{Ai} - d_{0i}$ |$n_{Bi} - d_{1i}$ |$n_i - d_i$   |</span>
+<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a>|Total         |$n_{Ai}$          |$n_{Bi}$          |$n_i$         |</span>
+<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a>Holding the margins as fixed, the probability of observing $d_{Ai}$ events in curve A at time $i$ follows a <span class="co">[</span><span class="ot">hypergeometric</span><span class="co">](https://bookdown.org/mpfoley1973/probability/hypergeometric.html)</span> distribution.</span>
+<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a>$$f(d_{Ai} | n_{Ai}, n_{Bi}, d_i) = \frac{{{n_{Ai}}\choose{d_{Ai}}}{{n_{Bi}}\choose{d_{Bi}}}}{{n_i}\choose{d_i}}$$</span>
+<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a>The expected value is $e_{Ai} = E(d_{Ai}) = \frac{d_i}{n_i} \cdot n_{0i}$ with variance $v_{Ai} = Var(d_{Ai}) = d_{i} \cdot \frac{n_{Ai}}{n_i}  \cdot \frac{n_{1i}}{n_i} \cdot \frac{n_i - d_i}{n_i - 1}$. </span>
+<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a>The log-rank test statistic is the sum of the differences between the observed and expected events, $U_0 = \sum (d_{Ai} - e_{Ai})$, normalized by dividing by the square-root of its variance, $V_0 = Var({U_0}) = \sum v_{Ai}$.</span>
+<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a>$$U = \frac{U_0}{\sqrt{V_0}} \sim N(0, 1)$$</span>
+<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a>$U^2$ is a chi-square random variable with one degree of freedom.</span>
+<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a>$$U^2 = \frac{U_0^2}{V_0} \sim \chi_1^2$$</span>
+<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a>lung_1 <span class="ot">&lt;-</span> survival<span class="sc">::</span>lung <span class="sc">%&gt;%</span></span>
+<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex =</span> <span class="fu">factor</span>(sex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Male"</span>, <span class="st">"Female"</span>)))</span>
+<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a>(km_diff <span class="ot">&lt;-</span> <span class="fu">survdiff</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> sex, <span class="at">data =</span> lung_1))</span>
+<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a>The *p*-value for $\chi_1^2$ = <span class="in">`r comma(km_diff$chisq, .1)`</span> is <span class="in">`1 - pchisq(km_diff$chisq, length(km_diff$n) - 1)`</span> = <span class="in">`r comma(1 - pchisq(km_diff$chisq, length(km_diff$n) - 1), .001)`</span>, so reject $H_0$ that males and females have identical survival patterns.</span>
+<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a>While the log-rank test can determine whether survival differs between groups, it does not estimate the effect size. It is a statistical, but not a clinical, assessment of the factor's impact <span class="co">[</span><span class="ot">@Clark2003b</span><span class="co">]</span>. </span>
 </code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
