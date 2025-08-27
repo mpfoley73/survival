@@ -7,13 +7,11 @@ library(survival)
 library(survminer)
 ```
 
-This chapter introduces survival analysis concepts.
-
 Survival analyses model time-to-event. They differ from linear regression in two respects. Event times are typically skewed right with many early events and few late ones, violating linear regression's normality assumption. Survival analyses must also manage censoring, an unknown starting event (left censoring) and/or ending event (right censoring)^[@Clark2003a has discussion of censoring types. Right censoring is most common.]. Censoring occurs if the event does not take place by the end of the study window, or the subject is in some way lost to follow-up. In @fig-1, subjects 3, 5, 9, and 15 either did not have the event or dropped out of the study. Censored observations do not reveal their total time to event, but they do reveal at least their minimum.
 
-```{r fig-1, fig.cap='Censored observations still contain information. Excluding or ignoring this information can lead to biased and inefficient predictions.', echo=FALSE, message=FALSE, warning=FALSE}
-
-library(tidyverse)
+```{r fig-1}
+#| fig-cap: "Censored observations still contain information. Excluding or ignoring leads to biased and inefficient predictions."
+#| code-fold: true
 
 survival::lung[81:100,] %>%
   mutate(
@@ -39,14 +37,16 @@ survival::lung[81:100,] %>%
        y = "Subject", color = NULL)
 ```
 
-Some analyses treat time-to-event as a continuous outcome with survival times following a parametric distribution such as the Weibull (@sec-parametric). A more common approach is the *semi-parametric* model, with an unspecified time-to-event distribution estimated by non-parameteric methods coupled with covariate effects following a parametric distribution. The Cox proportional hazards model is a semi-parametric model (@sec-semiparametric). A third approach treats time-to-event as a series of person-periods with binary outcomes that follow a logit or cumulative log-log distribution. These models are called discrete-time models (@sec-discrete). A fourth approach employs machine learning models such as trees and SVMs to optimize predictive power at some expense of interpretability (@sec-m)). 
+Some analyses treat time-to-event as a continuous outcome with survival times following a parametric distribution such as the Weibull (@sec-parametric). A more common approach is the *semi-parametric* model, with an unspecified time-to-event distribution estimated by non-parameteric methods coupled with covariate effects following a parametric distribution. The Cox proportional hazards model is a semi-parametric model (@sec-semiparametric). A third approach treats time-to-event as a series of person-periods with binary outcomes that follow a logit or cumulative log-log distribution. These models are called discrete-time models (@sec-discrete). A fourth approach employs machine learning models such as trees and SVMs to optimize predictive power at some expense of interpretability (@sec-ml)). 
 
-Any of these approaches can produce accurate and efficient results [@Suresh2022], but the typical survival analysis uses Kaplan-Meier plots to visualize survival curves (Chapter @sec-km), log-rank tests to compare survival curves among groups, and Cox proportional hazards regression to describe the effect of explanatory variables on survival. In R, use the **survival** package to model, **survminer** to visualize, and **gtsummary** for summarize. The following chapters cover the general concepts underlying survival analysis and the four approaches to estimation.
+Any of these approaches can produce accurate and efficient results [@Suresh2022], but the typical survival analysis uses Kaplan-Meier plots to visualize survival curves (@sec-km), log-rank tests to compare survival curves among groups, and Cox proportional hazards regression to describe the effect of explanatory variables on survival. In R, use the **survival** package to model, **survminer** to visualize, and **gtsummary** for summarize.
 
-Let $T^*$ be a random variable representing the time until the event, and $U$ be a random variable representing the time until (right) censoring. The observed value is whichever event comes first, $T = \mathrm{min}(T^*, U)$. The time, $T$, and status, $\delta = I[T^* < U]$ (1 = censored, 2 = event), constitutes the response in a survival analysis. The `survival::lung` data set is typical, where `time` = $T$ and `status` = $\delta$, and the other variables are identifying features for the subject.
+## Terminology {#terminology}
+
+Let $T^*$ be a random variable representing the time until the event, and $U$ be a random variable representing the time until (right) censoring. The observed value is whichever event comes first, $T = \mathrm{min}(T^*, U)$. The time, $T$, and status, $\delta = I[T^* < U]$ (1 = censored, 2 = event), constitutes the response in a survival analysis. The `survival::lung` dataset is typical, where `time` = $T$ and `status` = $\delta$, and the other variables are identifying features for the subject.
 
 ```{r}
-survival::lung %>% head()
+head(survival::lung)
 ```
 
 Censoring sometimes occurs when subjects are monitored for a fixed period of time (Type I), the study is halted after a pre-specified level of events are reached (Type II), or the subject drops out for a reason other than the event of interest (random censoring).
@@ -116,4 +116,4 @@ lung_1 <- survival::lung %>%
 
 The *p*-value for $\chi_1^2$ = `r comma(km_diff$chisq, .1)` is `1 - pchisq(km_diff$chisq, length(km_diff$n) - 1)` = `r comma(1 - pchisq(km_diff$chisq, length(km_diff$n) - 1), .001)`, so reject $H_0$ that males and females have identical survival patterns.
 
-while the log-rank test can determine whether survival differs between groups, it does not estimate the effect size. It is a statistical, but not a clinical, assessment of the factor's impact [@Clark2003b]. 
+While the log-rank test can determine whether survival differs between groups, it does not estimate the effect size. It is a statistical, but not a clinical, assessment of the factor's impact [@Clark2003b]. 
