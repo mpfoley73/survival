@@ -58,7 +58,6 @@ The study investigated differences in all-cause mortality between men and women 
 #| code-fold: true
 
 t1 <- d_lung |>
-  # mutate(status = factor(status, levels = c(1, 2), labels = c("censored", "died"))) |>
   tbl_summary(by = "ph.ecog", include = c(time, status, ph.ecog, age, sex)) |>
   add_overall()
 

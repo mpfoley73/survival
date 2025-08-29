@@ -2,7 +2,9 @@ ggplot2::theme_set(
   ggplot2::theme_light() +
     ggplot2::theme(
       strip.background = ggplot2::element_rect(fill = "gray90", color = "gray80"),
-      strip.text = ggplot2::element_text(colour = "gray30", size = 10)
+      strip.text = ggplot2::element_text(colour = "gray30", size = 10),
+      legend.position = "top",
+      legend.justification = "left"
     )
 )
 
