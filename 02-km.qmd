@@ -220,8 +220,7 @@ p <-
     linetype = 2
   ) +
   geom_point_interactive(aes(tooltip = tt)) +
-  theme(legend.position = "top") +
-  scale_color_manual(values = c("goldenrod", "sienna", "tomato")) +
+  scale_color_manual(values = my_palette$warm) +
   scale_y_continuous(labels = percent_format(1)) +
   labs(
     x = "time (days)", y = "Survival probability", color = NULL,
@@ -249,8 +248,7 @@ ggsurvplot(
   linetype = "strata", # Change line type by groups
   pval = FALSE,
   conf.int = FALSE,
-  ggtheme = theme_bw(),
-  palette = c("goldenrod", "sienna", "tomato"),
+  palette = my_palette$warm,
   title = "Cumulative Risk"
 )
 ```
@@ -262,7 +260,7 @@ ggsurvplot(
 ```{r fig-02-cumhaz}
 #| code-fold: true
 #| fig-cap: "Kaplan-Meier cumulative hazard curve."
-#| 
+
 ggsurvplot(
   km_fit,
   data = d_lung,
@@ -270,8 +268,7 @@ ggsurvplot(
   linetype = "strata", # Change line type by groups
   pval = FALSE,
   conf.int = FALSE,
-  ggtheme = theme_bw(),
-  palette = c("goldenrod", "sienna", "tomato"),
+  palette = my_palette$warm,
   title = "Cumulative Hazard"
 )
 ```

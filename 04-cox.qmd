@@ -138,7 +138,6 @@ surv_summary |>
   geom_line(aes(color = ph.ecog)) +
   geom_ribbon(
     aes(ymin = lower, ymax = upper, color = ph.ecog, fill = ph.ecog),
-    
     alpha = 0.4
   ) +
   geom_segment(
