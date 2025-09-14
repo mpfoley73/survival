@@ -8,9 +8,9 @@ library(survival)
 library(survminer)
 library(gtsummary)
 library(ggiraph)
-library(SemiCompRisks)
-detach("package:SemiCompRisks")
-detach("package:MASS")
+# library(SemiCompRisks)
+# detach("package:SemiCompRisks")
+# detach("package:MASS")
 ```
 
 The KM curve with logrank test is a univariate analyses describing the effect of a single categorical factor variable on survival. Parametric and semi-parametric models, on the other hand, are able to describe the effect of *multiple* covariates. The Cox proportional hazards model is a semi-parametric model. The Cox model expresses the expected hazard, $h(t)$, as an unspecified baseline hazard, $h_0(t)$, multiplied by the exponential of a linear combination of parameters, $\psi = e^{X\beta}$.
@@ -37,7 +37,8 @@ There are three ways to test the null hypothesis that coefficients have no effec
 
 The Cox proportional hazards model is analogous to the [logistic regression](https://bookdown.org/mpfoley1973/supervised-ml/generalized-linear-models-glm.html#logistic-regression) model. Rearranging $h(t) = h_0(t) \cdot e^{X \beta}$,
 
-$$\ln \left[ \frac{h(t)}{h_0(t)} \right] = X \beta.$$
+$$\ln \left[ \frac{h(t)}{h_0(t)} \right] = X \beta.$$ {#eq-04-log-rel-hzd}
+
 
 Whereas logistic regression predicts the *log odds* of the response, Cox regression predicts the *log relative hazard* (relative to the unspecified baseline) of the response. $\beta$ is the change in the log of the relative hazard associated with a one unit change in $X$. Its antilog is the hazard ratio (HR). A positive $e^{\beta_j}$ means the hazard increases with the covariate. 
 
@@ -51,14 +52,30 @@ e^\beta &=& \frac{h_b(t)}{h_a(t)} \\
 $$
 
 ```{r include=FALSE}
+#| code-fold: true
+
 # This is a copy/paste from the KM chapter.
-d_lung <- survival::lung %>%
-  filter(!is.na(ph.ecog)) %>%
+
+d_lung <-
+  survival::lung |>
+  filter(!is.na(ph.ecog)) |>
   mutate(
+    status = factor(
+      status,
+      levels = c(1, 2),
+      labels = c("censored", "died")
+    ),
     ph.ecog = factor(
       ph.ecog,
       levels = c(0, 1, 2, 3, 4),
-      labels = c("Asymptomatic", "Ambulatory", "In bed <50%", "In bed >50%", "Bedridden")),
+      labels = c(
+        "Asymptomatic",
+        "Ambulatory",
+        "In bed <50%",
+        "In bed >50%",
+        "Bedridden"
+      )
+    ),
     ph.ecog = fct_drop(ph.ecog),
     ph.ecog = fct_lump_n(ph.ecog, n = 2, other_level = "Bedridden"),
     sex = factor(sex, levels = c(1, 2), labels = c("Male", "Female")),
@@ -67,7 +84,7 @@ d_lung <- survival::lung %>%
   )
 ```
 
-The Cox proportional hazards model is demonstrated here with a case study using the `survival::lung` data set used in @sec-km. The study investigated differences in all-cause mortality between men and women diagnosed with advanced lung cancer. `r nrow(d_lung) %>% comma(1)` participants aged `r min(d_lung$age)` to `r max(d_lung$age)` were monitored up to three years until time of death. The participants were segmented into three groups according to their ECOG performance score: *Asymptomatic*, symptomatic but completely *Ambulatory*, and *Bedridden* at least part of the day. Participants' age and gender were captured as controlling covariates. We couldn't make use of them in the KM analysis, but we can now. @tbl-04-smry-stats presents the summary statistics of the data set.
+The Cox proportional hazards model is demonstrated here with a case study using the `survival::lung` data set used in @sec-km. The study investigated differences in all-cause mortality between men and women diagnosed with advanced lung cancer. 227 participants aged 39 to 82 were monitored up to three years until time of death. The participants were segmented into three groups according to their ECOG performance score: *Asymptomatic*, symptomatic but completely *Ambulatory*, and *Bedridden*. Participants' age and gender were captured as controlling covariates. We couldn't make use of them in the KM analysis, but we can now. @tbl-04-smry-stats presents the summary statistics of the data set.
 
 ```{r tbl-04-smry-stats}
 #| code-fold: true
@@ -82,17 +99,20 @@ as_gt(t1) |>
 
 ## Fitting the Model
 
-Fit a Cox proportional hazards model with `coxph()`.
+Fit a Cox proportional hazards model with `survival::coxph()`.
 
 ```{r}
-cox_fit <- coxph(Surv(time, status) ~ sex + ph.ecog + age, data = d_lung)
+cox_fit <- coxph(
+  Surv(time, status == "died") ~ sex + ph.ecog + age,
+  data = d_lung
+)
 
 summary(cox_fit)
 ```
 
 A negative coefficient estimator means the hazard decreases with increasing values of the variable. Females have a log hazard of death equal to `coef(cox_fit)[1]` = `r comma(coef(cox_fit)[1], .01)` of that of males. The exponential is the hazard ratio (HR), the effect-size of the covariate. Being female reduces the hazard by a factor of `exp(coef(cox_fit)[1])` = `r comma(exp(coef(cox_fit)[1]), .01)` (`r percent(1 - exp(coef(cox_fit)[1]), 1)`). I.e., at any given time, `r comma(exp(coef(cox_fit)[1]), .01)` times as many females die as males.
 
-The last section of the summary object is the three tests for the overall significance of the model. These three methods are asymptotically equivalent. The Likelihood ratio test has better behavior for small sample sizes, so it is generally preferred. The p-values for all three overall tests (likelihood, Wald, and score) are significant, indicating that the model is significant (i.e., not all $\beta$ values are 0). Present the results with **gtsummary**.
+The last section of the summary object is the three tests for the overall significance of the model. These three methods are asymptotically equivalent. The likelihood ratio test has better behavior for small sample sizes, so it is generally preferred. The *p*-values for all three tests are significant, indicating that the model is significant (i.e., not all $\beta$ values are 0). Present the results with **gtsummary**.
 
 ```{r}
 gtsummary::tbl_regression(cox_fit, exponentiate = TRUE) |>
@@ -163,35 +183,27 @@ surv_summary |>
 
 ## Assumptions
 
-A Cox proportional hazards model analysis is valid under the following conditions ([Ref1](https://timeseriesreasoning.com/contents/schoenfeld-residuals/), [Ref2](https://www.r-bloggers.com/2016/12/cox-model-assumptions/)).
+The Cox model is valid when censoring is independent of the probability of experiencing the event and there are no omitted variables. Additionally, there are two empircally testable assumptions ([Ref1](https://timeseriesreasoning.com/contents/schoenfeld-residuals/), [Ref2](https://www.r-bloggers.com/2016/12/cox-model-assumptions/)).
 
 * **Hazards are proportional**. At any time *t*, all individuals experience a multiple of the same baseline hazard, $h_0(t)$. A violation may occur if, for instance, a treatment loses effectiveness over time.
 * **Linearity**. The log of the hazard is linearly related to each of the covariates.
-* **Independent censoring**. The probability of being censored is independent of the probability of experiencing the event. A violation would occur if sicker patients dropped out of the study.
-* **No omitted confounders**. All relevant covariates should be appropriately included in the model.
 
-Test the proportionality assumption with Schoenfeld residuals. Schoenfeld residuals are like normal residuals ($y$ vs $\hat{y}$) except that they predict $X$ and compare $\hat{X}$ to $X$. Shoenfeld residuals should be uncorrelated with each other and time-independent.
-
-. Test for this with an auto-correlation plot or a white noise test such as the Ljung-Box test.
-* The residuals are time-independent. Test for this with a plot the residuals versus will.
-* The mean of the scaled residuals is zero if $\beta$ is time-independent. Test with a Chi-square test.
-
-`survival::cox.zph()` correlates the scaled Schoenfeld residuals with time. If the hazards are time-invariant, the coefficient estimates will be zero. `cox.zph()` *p*-values < .05 mean the slope *is* non-zero. Below, the test is not statistically significant for each of the covariates, and the global test is also not statistically significant, so the proportional hazards assumption holds.
+Test the proportionality assumption with Schoenfeld residuals. Schoenfeld residuals are like normal residuals ($y$ vs $\hat{y}$) except that they predict $X$ and compare $\hat{X}$ to $X$. `survival::cox.zph()` correlates scaled Schoenfeld residuals with time. If the hazards are time-invariant, the coefficient estimates will be zero. *p*-values < .05 reject the null hypothesis that the slope is zero. Below, the test is not statistically significant for each of the covariates, and the global test is also not statistically significant, so the proportional hazards assumption holds.
 
 ```{r}
 (cox_test_ph <- cox.zph(cox_fit))
 ```
 
-Use `ggcoxzph()` to plot the residuals. If the proportionality assumption holds, the residuals will not show a systematic trend over time. A flat LOESS line indicates the covariate effect is constant. If a covariate violates the PH assumption, consider adding time-dependent interactions or stratifying the model by that variable.
+Plot the residuals with `ggcoxzph()`. There should be no systematic trend (the LOESS line is flat). If a covariate violates the PH assumption, consider adding time-dependent interactions or stratifying the model by that variable.
 
 ```{r fig.height=8}
 ggcoxzph(cox_test_ph) 
 ```
 
-Test the linearity assumption by plotting the Martingale residuals against the continuous covariates to ensure there are no patterns. Look for random scatter around zero. A systematic curve or pattern indicates nonlinearity. If you see a U-shape, S-shape, or any consistent deviation, consider transforming the covariate.
+Test the linearity assumption by plotting the Martingale residuals against the continuous covariates. A systematic curve or pattern indicates nonlinearity, so look for random scatter around zero. If you see a U-shape, S-shape, or any consistent deviation, consider transforming the covariate.
 
 ```{r}
-coxph(Surv(time, status) ~ age, data = d_lung) |>
+coxph(Surv(time, status == "died") ~ age, data = d_lung) |>
   ggcoxdiagnostics(type = "martingale", ox.scale = "observation.id")
 ```
 
@@ -200,24 +212,28 @@ You can also test for influential observations with deviance residuals. Deviance
 ```{r}
 p <- 
   ggcoxdiagnostics(cox_fit, type = "deviance", ox.scale = "observation.id") +
-  geom_point_interactive(aes(tooltip = glue("{xval}")))
+  geom_point_interactive(aes(tooltip = glue("Obs. {xval}")))
+
 girafe(ggobj = p)
 ```
 
 ## Interpreting Results
 
-Table @tbl-cox-result shows the effect sizes as hazard ratios with 95% confidence intervals (CI) for each covariate in relation to overall survival. Each factor is assessed through separate univariate Cox regressions. All three factors of the multivariate model show how the factors jointly impact on survival. Being famale increased survival, abd higher ECOG scores impaired survival. Age was not statistically different from zero (at the .05 level). The *p*-values for the comparisons between each ECOG type are presented, but it is possible to also show an overall likelihood ratio test for the differences between the categories as a whole.
+@tbl-cox-result shows the effect sizes as hazard ratios with 95% confidence intervals (CI) for each covariate in relation to overall survival. Each factor is assessed through separate univariate Cox regressions. All three factors of the multivariate model show how the factors jointly impact on survival. Being female increased survival, and higher ECOG scores impaired survival. Age was not statistically different from zero at the .05 level. The *p*-values for the comparisons between each ECOG type are presented, but it is possible to also show an overall likelihood ratio test for the differences between the categories as a whole.
 
 ```{r tbl-cox-result}
 #| tbl-cap: Hazard ratios from Cox PH model for lung dataset.
 
-sex_gt <- coxph(Surv(time, status) ~ sex, data = d_lung) %>%
+sex_gt <-
+  coxph(Surv(time, status == "died") ~ sex, data = d_lung) |>
   tbl_regression(exponentiate = TRUE)
 
-ph.ecog_gt <- coxph(Surv(time, status) ~ ph.ecog, data = d_lung) %>%
+ph.ecog_gt <-
+  coxph(Surv(time, status == "died") ~ ph.ecog, data = d_lung) |>
   tbl_regression(exponentiate = TRUE)
 
-age_gt <- coxph(Surv(time, status) ~ age, data = d_lung) %>%
+age_gt <-
+  coxph(Surv(time, status == "died") ~ age, data = d_lung) |>
   tbl_regression(exponentiate = TRUE)
 
 cox_uni_gt <- gtsummary::tbl_stack(list(sex_gt, ph.ecog_gt, age_gt))
@@ -226,7 +242,7 @@ cox_multi_gt <- tbl_regression(cox_fit, exponentiate = TRUE)
 
 gtsummary::tbl_merge(
   list(cox_uni_gt, cox_multi_gt),
-  tab_spanner = c("Univariate analysis", "Multivaraite analysis")
+  tab_spanner = c("Univariate analyses", "Multivaraite analysis")
 )
 ```
 
@@ -238,61 +254,77 @@ The guidelines for reporting the Kaplan-Meier test are from Laerd's Kaplan-Meier
 
 ## Landmark Analysis
 
-A **landmark** analysis measures survival *after a milestone period*. E.g., I data set may have survival times after a disease onset, but a treatment typically starts after 90 days. In that case, you want to subset the persons surving at least 90 days and then subtract 90 from all the times. In a KM analysis manually adjust the data. In `coxph()` use the `subset` argument.
+A **landmark** analysis measures survival *after a milestone period*. E.g., the dataset may present survival times after disease onset, but a treatment typically starts after 90 days. In a KM analysis manually adjust the data. In `coxph()` use the `subset` argument.
 
 ```{r eval=FALSE}
 coxph(
-  Surv(time, status) ~ age + sex + ph.ecog, 
+  Surv(time, status == "died") ~ age + sex + ph.ecog, 
   subset = time > 90, 
   data = d_lung
 )
 ```
 
-
-
 ## Time-Dependent Covariates {#sec-time-dependent-covariates}
 
-If a covariate changes over time, you need to modify the underlying data set. `tmerge()` lengthens the data set for the relevant time spans for the time-dependent covariate. Helper functions `event()` and `tdc()` modify the outcome and time-dependent covariates.
+If a covariate changes over time, lengthen the underlying data set with `tmerge()` to create time spans for the covariate values.
 
-The BMT data set from the **SemiCompRisks** package is a good example. `T1` and `delta1` are the time and event indicator variables. `TA` and `deltaA` are time and event indicators for a secondary disease.
+Dataset `survival::pbc` contains baseline and follow-up status for 312 people with primary biliary cirrhosis (PBC). `survival::pbcseq` contains their periodic lab results.
+
+Statuses are 0 (censored), 1 (liver transplant), died (status = 2). Person 1 died at 400 days. Person 2 was still alive at 4,500 days.
 
 ```{r}
-data(BMT, package = "SemiCompRisks")
+pbc_0 <- survival::pbc |> filter(id <= 312) |> select(c(id:sex))
 
-dat <- BMT %>%
-  rowid_to_column("subject_id") %>%
-  select(subject_id, T1, delta1, TA, deltaA)
-
-dat %>% filter(subject_id %in% c(1, 2, 15, 18))
+head(pbc_0)
 ```
 
-`tmerge()` merges two data sets, usually the same ones, and expands the time/event vars.
+The first step is to merge the base dataset with itself to define the studied event status, creating `tstart`, `tstop`, and `death`.
 
 ```{r}
-dat_2 <- tmerge(
-  data1 = dat,
-  data2 = dat,
-  id = subject_id,
-  death = event(T1, delta1),
-  agvhd = tdc(TA)
+pbc_1 <- tmerge(pbc_0, pbc_0, id = id, death = event(time, status))
+
+head(pbc_1)
+```
+
+The second source of data is the time-dependent covariate data, `survival::pbcseq`. Person 1 had lab work done on day 0 and 192. Person 2 had lab work on 9 occasions. 
+
+```{r}
+seq_0 <- survival::pbcseq |> select(id, day, bili, protime)
+
+seq_0 |> filter(id == 1)
+
+seq_0 |> filter(id == 2)
+```
+
+Merge the two datasets together, creating time-dependent covariates for two lab markers, `bili` and `protime`.
+
+- Person 1 had their second lab word done on day 192, then died at day 400. Their `bili` and `protime` are as of time `tstart`. Note that `age` is _not_ time dependent - it describes the person at the time of entering the study.
+
+- Person 2 was still alive as of the time the data was collected, 4500 days from entering the study. Their last lab work was at day 3226.
+
+```{r}
+mdl_dat <-
+  tmerge(
+    pbc_1,
+    seq_0,
+    id = id,
+    bili = tdc(day, bili),
+    protime = tdc(day, protime)
+  )
+
+mdl_dat |> filter(id == 1)
+
+mdl_dat |> filter(id == 2)
+```
+
+Fit the model as usual with `coxph()`. There are three possible events, so explicitly look for `death == 2` (died), treating the other outcomes as censoring.
+
+```{r}
+cox_fit <- coxph(
+  Surv(tstart, tstop, death==2) ~ log(bili) + log(protime) + trt,
+  mdl_dat
 )
 
-dat_2 %>% filter(subject_id %in% c(1, 2, 15, 18))
+tbl_regression(cox_fit)
 ```
-
-Define the Cox model Surv object with the start and end times.
-
-```{r}
-dat_2 %>% 
-  coxph(Surv(time = tstart, time2 = tstop, event = death) ~ agvhd, data = .) %>% 
-  gtsummary::tbl_regression(exp = TRUE)
-```
-
-From [Emily Zabor's tutorial](https://www.emilyzabor.com/tutorials/survival_analysis_in_r_tutorial.html), use a landmark analysis to visualize a covariate and Cox for modeling.
-
-The Cox model is valid under certain conditions.
-
-* Censoring event causes should be independent of the event.
-* There is a multiplicative relationship between the predictors and the hazard.
-* The hazard ratio is constant over time.
 

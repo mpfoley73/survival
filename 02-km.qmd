@@ -11,19 +11,21 @@ library(glue)
 library(ggiraph)
 ```
 
-Survival data are generally described and modeled in terms of the survivor function and the hazard function. The survivor function $S(t)$ is the probability of surviving to some time beyond *t* and is usually estimated by the Kaplan-Meier (KM) method. The log-rank test is then used to test for differences between survival curves for treatment groups. The hazard function $h(t)$ is the instantaneous event rate at *t* given survival up to *t*. It is primarily used as a diagnostic tool. KM analyses are limited, however, because they cannot adjust for subject-related confounding variables. Adjust for covariates with multivariate survival analyses such as the parametric and semi-parametric models [@Clark2003a].
-
-The KM estimator for the survival function is the product over failure times of the conditional probabilities of surviving to the next failure time.
+Kaplan-Meier (KM) is an estimator of the survivor function, $S(t)$, the probability of surviving beyond time *t*. KM is defined as the sum-product of the conditional probabilities of surviving to the next failure time, i.e., the cumulative survival probability.
 
 $$\hat{S}(t) = \prod_{i: t_i < t}{\frac{n_i - d_i}{n_i}}$$ {#eq-s}
 
-where $n_i$ is the number of subjects at risk at time $i$ and $d_i$ is the number incurring the event. I.e., $\hat{S}(t)$ is the sum-product of the survival proportions at each time interval, the cumulative survival probability. The KM curve falls only when an event occurs, not when a subject is censored. Confidence limits are calculated using the "delta" method to obtain the variance of $\log \hat{S}(t)$.[^delta-method]
+In @eq-s, $n_i$ is the number of subjects at risk at time $t_i$ and $d_i$ is the number incurring the event. The KM curve falls only when an event occurs, not when a subject is censored. Confidence limits are calculated using the "delta" method to obtain the variance of $\log \hat{S}(t)$.[^delta-method] 
 
 [^delta-method]: The delta method approximates the variance of a function of an estimator using a Taylor expansion.
 
-The KM method is demonstrated here with a case study using the `survival::lung` data set.
+After a KM analysis, a log-rank test is often used to test for differences among curves. KM is ideal for comparing survival between groups defined with a single categorical variable because it makes no assumptions about the underlying hazard function. Multivariate analyses require parametric and semi-parametric models that estimate the hazard function, $h(t)$, the instantaneous event rate at *t* given survival up to *t* [@Clark2003a]. Even there, KM is a useful exploratory step because it shows the actual survival probabilities. 
 
-```{r}
+The KM method is demonstrated here with a case study using the `survival::lung` dataset. The study investigated differences in all-cause mortality between men and women diagnosed with advanced lung cancer. 227 participants aged 39 to 82 were monitored up to three years until time of death. The participants were segmented into three groups according to their ECOG performance score: *Asymptomatic*, symptomatic but completely *Ambulatory*, and *Bedridden*. The dataset includes participant age and gender (not used in this analysis). @tbl-02-smry-stats presents the summary statistics.
+
+```{r tbl-02-smry-stats}
+#| code-fold: true
+
 d_lung <-
   survival::lung |>
   filter(!is.na(ph.ecog)) |>
@@ -50,12 +52,6 @@ d_lung <-
     age_bin = cut(age, breaks = c(38, 55, 65, 83)),
     patient_id = row_number()
   )
-```
-
-The study investigated differences in all-cause mortality between men and women diagnosed with advanced lung cancer. `r nrow(d_lung)` participants aged `r min(d_lung$age)` to `r max(d_lung$age)` were monitored up to three years until time of death. The participants were segmented into three groups according to their ECOG performance score: *Asymptomatic*, symptomatic but completely *Ambulatory*, and *Bedridden* at least part of the day. Participants' age and gender were captured as possible controlling covariates, but will not be used here since KM analyses only compare the distributions among levels of a single factor. @tbl-02-smry-stats presents the summary statistics.
-
-```{r tbl-02-smry-stats}
-#| code-fold: true
 
 t1 <- d_lung |>
   tbl_summary(by = "ph.ecog", include = c(time, status, ph.ecog, age, sex)) |>
@@ -67,18 +63,16 @@ as_gt(t1) |>
 
 ## Assumptions
 
-You can run a KM analysis for processes that have a binary outcome (e.g., dead vs alive), a precise event time (number rather than an interval), minimal left censoring (unknown starting times), and independent censoring (independent of the event).[^uninformative-censoring]
+KM analyses model processes that have a binary outcome, a precise event time, minimal left censoring (unknown starting times), and censoring that is independent of the event.[^uninformative-censoring]
 
 [^uninformative-censoring]: With **uninformative censoring**, censoring causes are independent of the event. Subjects do not drop out of the study because of something related to their group. E.g., a subject does not drop out of a therapy study because the therapy is making their condition worse.
 
 Two assumptions underlie the KM procedure:
 
--   **No Cohort Effects**. There are no secular trends. E.g., staggered starting times may encompass the introduction of new therapies which affect survival. Test for cohort effects by running KM tests for multiple time intervals. You only need to test for this if there is reason to believe effects may be present.
+-   **No Cohort Effects**. If starting times are staggered and encompass the introduction of new therapies, survival will vary. Test for cohort effects by running KM tests for multiple time intervals. (Only test for cohort affects if there is reason to believe they exist.)
 -   **Similar Censorship Patterns**. The amount and pattern of censoring should be similar. Censorship patterns can be tested by inspection.
 
-Cohort effects should not apply in a study lasting less than 3 years, so that assumption is not tested in this case study.
-
-The participant censoring plot shows censored cases were equally spread over time and not too dissimilar for the *Asymptomatic* and *Ambulatory* groups, but the *Bedridden* group had a low number of censoring events (@fig-02-censoring). Censored cases were negatively associated with symptom severity, *Asymptomatic*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Asymptomatic")`, *Ambulatory*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Ambulatory")`, and *Bedridden*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Bedridden")` study groups.[^02-km-1]
+The participant censoring plot shows censored cases were equally spread over time and not too dissimilar for the *Asymptomatic* and *Ambulatory* groups, but the *Bedridden* group had only a few censoring events (@fig-02-censoring).
 
 [^02-km-1]: Use `gtsummary::inline_text()` to summarize (e.g., `gtsummary::inline_text(t1, variable = status, level = "censored", column = "Asymptomatic")`.
 
@@ -94,9 +88,11 @@ d_lung |>
   labs(title = "Participant Censoring", x = "Time (days)", y = NULL)
 ```
 
+From this, conclude that censored cases were negatively associated with symptom severity, *Asymptomatic*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Asymptomatic")`, *Ambulatory*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Ambulatory")`, and *Bedridden*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Bedridden")` study groups.[^02-km-1]
+
 ## Fitting the Model
 
-Calculate $\hat{S}(t)$ with `survival::survfit()`. `survfit()` operates on a `Surv` object, created by `survival::Surv()`. Explanatory variables can be defined as factors, but the event indicator, `status`, must be numeric or boolean, coded as 0\|1, 1\|2, or FALSE|TRUE.[^02-km-2] `survfit()` creates survival curves from a formula or from a previously fitted Cox model. If the confidence interval crosses zero, specify the log-log transformation parameter `conf.type = "log-log"` (this one doesn't need it).
+Calculate $\hat{S}(t)$ with `survival::survfit()`. `survfit()` operates on a `Surv` object, created by `survival::Surv()`. Explanatory variables can be defined as factors, but the event indicator, `status`, must be numeric or boolean, coded as 0\|1, 1\|2, or FALSE|TRUE.[^02-km-2] If the confidence interval crosses zero, specify the log-log transformation parameter `conf.type = "log-log"` (this one doesn't need it).
 
 [^02-km-2]: See neat discussion in Note section of `Surv()` help file.
 
@@ -129,9 +125,9 @@ km_smry$table
 
 <br>
 
-Values are median with 95% CI. Asymptomatic participants had a median survival time of `r inline_text(km_gt, "ph.ecog", level = "Asymptomatic", column = stat_1)` days. This was longer than the Ambulatory group, `r inline_text(km_gt, "ph.ecog", level = "Ambulatory", column = stat_1)` days, and Bedridden group, `r inline_text(km_gt, "ph.ecog", level = "Bedridden", column = stat_1)` days. Lower levels of ECOG appear to have a protective effect, but whether it is statistically significant requires a formal statistical test.
+Values are median with 95% CI. Lower levels of ECOG appear to have a protective effect. Asymptomatic participants had a median survival time of `r inline_text(km_gt, "ph.ecog", level = "Asymptomatic", column = stat_1)` days. This was longer than the Ambulatory group, `r inline_text(km_gt, "ph.ecog", level = "Ambulatory", column = stat_1)` days, and Bedridden group, `r inline_text(km_gt, "ph.ecog", level = "Bedridden", column = stat_1)` days.
 
-Extract values for reporting with `gtsummary::inline_text()` (as was done above), or create a summary object. The `table` attribute of the summary object is a named numeric matrix. E.g., get Asymptomatic events with `km_smry$table["ph.ecog=Asymptomatic", "events"]`.
+Extract values for reporting with `gtsummary::inline_text()`, or create a summary object. The `table` attribute of the summary object is a named numeric matrix. E.g., get Asymptomatic events with `km_smry$table["ph.ecog=Asymptomatic", "events"]`.
 
 ```{r collapse=TRUE}
 km_smry <- summary(km_fit)
@@ -158,10 +154,10 @@ gtsummary::tbl_survfit(km_fit, times = 500)
 broom::tidy(km_fit)
 ```
 
-The KM plot in @fig-02-survcurv gives you a better feel for the data. Vertical drops indicate events and vertical ticks indicate censoring. Cumulative survival is negatively associated with the ECOG performance score. There is no substantial crossing of the survival curves that would affect the power of the statistical tests. The curves are similarly shaped. The log-rank test is ideal for similarly shaped distributions and distributions that do not cross. The Breslow, and Tarone-Ware tests are more sensitive alternatives.
+The KM plot in @fig-02-survcurv gives you a better feel for the data. Vertical drops indicate events and vertical ticks indicate censoring. Cumulative survival is negatively associated with the ECOG performance score. There is no substantial crossing of the survival curves that would affect the power of the statistical tests. The curves are similarly shaped.
 
 ::: {.callout-note}
-**survminer** does a good job plotting KM models and includes a risk table. But you can do just as good of a job with **ggplot** and control more of the output. @fig-02-survcurv2 combines **ggplot** with **giraph** for a full risk table in the tooltips.
+**survminer** does a good job plotting KM models and includes a risk table, but **ggplot** allows you to control more of the output. @fig-02-survcurv2 combines **ggplot** with **giraph** for a full risk table in the tooltips.
 :::
 
 ::: panel-tabset
@@ -181,8 +177,7 @@ ggsurvplot(
   risk.table = TRUE,
   fontsize = 3, # used in risk table
   surv.median.line = "hv", # median horizontal and vertical ref lines
-  ggtheme = theme_light(),
-  palette = c("goldenrod", "sienna", "tomato"),
+  palette = my_palette$warm,
   title = "Kaplan-Meier Survival Function Estimate",
   legend.title = "ECOG",
   legend.labs = levels(d_lung$ph.ecog)
@@ -210,12 +205,12 @@ p <-
   ggplot(aes(x = time, y = estimate, color = strata)) +
   geom_step() +
   geom_segment(
-    data = med, 
+    data = med,
     aes(x = 0, xend = time, y = .5, yend = .5),
     linetype = 2
   ) +
   geom_segment(
-    data = med, 
+    data = med,
     aes(x = time, xend = time, y = 0, yend = .5),
     linetype = 2
   ) +
@@ -239,17 +234,16 @@ girafe(ggobj = p)
 
 ```{r fig-02-cumrisk}
 #| code-fold: true
-#| fig-cap: "Kaplan-Meier cumulative risk curve."
+#| fig-cap: "Cumulative risk curve."
 
 ggsurvplot(
   km_fit,
   data = d_lung,
   fun = "event",
-  linetype = "strata", # Change line type by groups
+  linetype = "strata",
   pval = FALSE,
   conf.int = FALSE,
-  palette = my_palette$warm,
-  title = "Cumulative Risk"
+  palette = my_palette$warm
 )
 ```
 
@@ -259,7 +253,7 @@ ggsurvplot(
 
 ```{r fig-02-cumhaz}
 #| code-fold: true
-#| fig-cap: "Kaplan-Meier cumulative hazard curve."
+#| fig-cap: "Cumulative hazard curve."
 
 ggsurvplot(
   km_fit,
@@ -268,8 +262,7 @@ ggsurvplot(
   linetype = "strata", # Change line type by groups
   pval = FALSE,
   conf.int = FALSE,
-  palette = my_palette$warm,
-  title = "Cumulative Hazard"
+  palette = my_palette$warm
 )
 ```
 
@@ -282,23 +275,49 @@ Determine whether there are significant differences in the fitted survival distr
 
 The log-rank test weights the difference at each time point equally. Compared to Breslow and Tarone-Ware, it places greater emphasis on differences at later rather than earlier time points. The Breslow test (aka generalized Wilcoxon or Gehan) weights the differences by the number at risk at each time point. The effect is to place greater weight on the differences at earlier time points. The Tarone-Ware test weights differences the same way as Breslow, but takes the square root of the number at risk.
 
+::: panel-tabset
+
+### Log-rank
+
 ```{r}
-(km_diff <- survdiff(Surv(time, status == "died") ~ ph.ecog, data = d_lung))
+(km_diff <- survdiff(
+  Surv(time, status == "died") ~ ph.ecog, 
+  data = d_lung
+))
 ```
 
 The survival distributions for the three interventions were statistically significantly different, $\chi^2$(2) = `r km_diff$chisq %>% number(.1)`, *p* \< .001.
 
-Breslow and Tarone-Ware are in the **coin** package.
+### Breslow
 
 ```{r}
-coin::logrank_test(Surv(time, status == "died") ~ ph.ecog, data = d_lung, type = "Tarone-Ware")
-coin::logrank_test(Surv(time, status == "died") ~ ph.ecog, data = d_lung, type = "Gehan-Breslow")
+coin::logrank_test(
+  Surv(time, status == "died") ~ ph.ecog,
+  data = d_lung,
+  type = "Gehan-Breslow"
+)
 ```
 
-Three tests produced identical conclusions. The log rank test is an omnibus test. Create a pairwise comparisons table to see which groups differed.
+### Tarone-Ware
 
 ```{r}
-(km_pairwise <- survminer::pairwise_survdiff(Surv(time, status == "died") ~ ph.ecog, data = d_lung))
+coin::logrank_test(
+  Surv(time, status == "died") ~ ph.ecog,
+  data = d_lung,
+  type = "Tarone-Ware"
+)
+
+```
+
+:::
+
+The three tests produced identical conclusions. The log rank test is an omnibus test. Create a pairwise comparisons table to see which groups differed.
+
+```{r}
+(km_pairwise <- survminer::pairwise_survdiff(
+  Surv(time, status == "died") ~ ph.ecog,
+  data = d_lung
+))
 ```
 
 Adjust the statistical significance to compensate for making multiple comparisons with a Bonferroni correction. There are three comparisons so divide .05 by 3, so the significance threshold is *p* \< .0167. There was a statistically significant difference in survival distributions for Asymptomatic vs Bedridden, *p* \< .001, and Ambulatory vs Bedridden, *p* = `r km_pairwise$p.value["Bedridden", "Ambulatory"] %>% number(.001)`, but not for Asymptomatic vs Ambulatory, *p* = `r km_pairwise$p.value["Ambulatory", "Asymptomatic"] %>% number(.001)`.
@@ -307,4 +326,4 @@ Adjust the statistical significance to compensate for making multiple comparison
 
 The guidelines for reporting the Kaplan-Meier test are from Laerd's Kaplan-Meier using SPSS Statistics [@Laerd2015]. Report the results like this.
 
-> `r nrow(d_lung) %>% comma(1)` Men and women diagnosed with advanced lung cancer aged `r min(d_lung$age)` to `r max(d_lung$age)` were monitored up to three years until time of death. Participants were classified into three groups according to their ECOG performance score: *asymptomatic* (n = `r d_lung %>% count(ph.ecog) %>% filter(ph.ecog == "Asymptomatic") %>% pull(n)`), *symptomatic but completely ambulatory* (n = `r d_lung %>% count(ph.ecog) %>% filter(ph.ecog == "Ambulatory") %>% pull(n)`), and *bedridden at least part of the day* (n = `r d_lung %>% count(ph.ecog) %>% filter(ph.ecog == "Bedridden") %>% pull(n)`). A Kaplan-Meier survival analysis (Kaplan & Meier, 1958) was conducted to compare survival times among the three ECOG performance scores. Censored cases were negatively associated with symptom severity, *asymptomatic*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Asymptomatic")`, *symptomatic but completely ambulatory*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Ambulatory")`, and *bedridden*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Bedridden")` study groups. Participants that were asymptomatic had a median survival time of `r inline_text(km_gt, "ph.ecog", level = "Asymptomatic", column = stat_1)` days. This was longer than the ambulatory group, `r inline_text(km_gt, "ph.ecog", level = "Ambulatory", column = stat_1)` days, and bedridden group, `r inline_text(km_gt, "ph.ecog", level = "Bedridden", column = stat_1)` days. A log rank test was run to determine if there were differences in the survival distribution for the different types of intervention. The survival distributions for the three interventions were statistically significantly different, $\chi^2$(2) = `r km_diff$chisq %>% number(.1)`, *p* \< .001. Pairwise log rank comparisons were conducted to determine which intervention groups had different survival distributions. A Bonferroni correction was made with statistical significance accepted at the *p* \< .017 level. There was a statistically significant difference in survival distributions for the aymptomatic vs bedridden, *p* \< .001, and ambulatory vs bedridden, *p* = `r km_pairwise$p.value["Bedridden", "Ambulatory"] %>% number(.001)`, groups. However, the survival distributions for the asymptomatic vs ambulatory group were not statistically significant, *p* = `r km_pairwise$p.value["Ambulatory", "Asymptomatic"] %>% number(.001)`
+> `r nrow(d_lung) %>% comma(1)` Men and women diagnosed with advanced lung cancer aged `r min(d_lung$age)` to `r max(d_lung$age)` were monitored up to three years until time of death. Participants were classified into three groups according to their ECOG performance score: *asymptomatic* (n = `r d_lung %>% count(ph.ecog) %>% filter(ph.ecog == "Asymptomatic") %>% pull(n)`), *symptomatic but completely ambulatory* (n = `r d_lung %>% count(ph.ecog) %>% filter(ph.ecog == "Ambulatory") %>% pull(n)`), and *bedridden at least part of the day* (n = `r d_lung %>% count(ph.ecog) %>% filter(ph.ecog == "Bedridden") %>% pull(n)`). A Kaplan-Meier survival analysis (Kaplan & Meier, 1958) was conducted to compare survival times among the three ECOG performance scores. Censored cases were negatively associated with symptom severity, *asymptomatic*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Asymptomatic")`, *symptomatic but completely ambulatory*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Ambulatory")`, and *bedridden*, `r gtsummary::inline_text(t1, variable = status, level = "censored", column = "Bedridden")` study groups. Participants that were asymptomatic had a median survival time of `r inline_text(km_gt, "ph.ecog", level = "Asymptomatic", column = stat_1)` days. This was longer than the ambulatory group, `r inline_text(km_gt, "ph.ecog", level = "Ambulatory", column = stat_1)` days, and bedridden group, `r inline_text(km_gt, "ph.ecog", level = "Bedridden", column = stat_1)` days. A log rank test was run to determine if there were differences in the survival distribution for the different types of intervention. The survival distributions for the three interventions were statistically significantly different, $\chi^2$(2) = `r km_diff$chisq %>% number(.1)`, *p* \< .001. Pairwise log rank comparisons were conducted to determine which intervention groups had different survival distributions. A Bonferroni correction was made with statistical significance accepted at the *p* \< .017 level. There was a statistically significant difference in survival distributions for the asymptomatic vs bedridden, *p* \< .001, and ambulatory vs bedridden, *p* = `r km_pairwise$p.value["Bedridden", "Ambulatory"] %>% number(.001)`, groups. However, the survival distributions for the asymptomatic vs ambulatory group were not statistically significant, *p* = `r km_pairwise$p.value["Ambulatory", "Asymptomatic"] %>% number(.001)`
